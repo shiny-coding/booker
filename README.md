@@ -44,7 +44,9 @@ A Next.js application for managing and converting your ebook collection with a b
 ### Optional (for format conversion)
 - [Calibre](https://calibre-ebook.com/download) - Required for ebook format conversion
 
-## Installation
+## Quick Start
+
+### Local Development
 
 ### 1. Install dependencies
 ```bash
@@ -74,6 +76,31 @@ npm run dev
 ```
 
 Visit http://localhost:3000
+
+### Production Deployment (Ubuntu Server)
+
+For deploying to Ubuntu server with Docker:
+
+```bash
+# Quick deploy (Ubuntu)
+cd bookstore
+./scripts/deploy.sh
+```
+
+This will:
+- Install Docker and Docker Compose (if needed)
+- Generate secure environment variables
+- Build the Docker image with Calibre included
+- Start the application on port 3000
+
+For detailed deployment instructions including:
+- Docker deployment (recommended)
+- Direct Ubuntu installation
+- Nginx reverse proxy setup
+- SSL/HTTPS configuration
+- PM2 process management
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete guide.
 
 ## Usage
 
