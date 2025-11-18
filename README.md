@@ -46,7 +46,20 @@ A Next.js application for managing and converting your ebook collection with a b
 
 ## Quick Start
 
-### Local Development
+### Windows Development
+
+**For Windows developers**, see the comprehensive **[WINDOWS-DEV.md](WINDOWS-DEV.md)** guide for:
+- Running Calibre in Docker/WSL2 (recommended)
+- Native Windows Calibre installation
+- Development scripts and troubleshooting
+
+Quick start for Windows with Docker Calibre:
+```powershell
+# Start everything (Calibre + Dev server)
+.\scripts\dev-start.ps1
+```
+
+### Local Development (macOS/Linux)
 
 ### 1. Install dependencies
 ```bash

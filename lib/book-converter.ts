@@ -5,14 +5,21 @@ import type { BookFormat, ConversionJob } from './types';
 import { CONVERSION_MATRIX, getExtension } from './types';
 import { getMetadataManager } from './metadata-manager';
 
-// Import calibre-node
+// Calibre conversion mode: 'local' or 'remote'
+const CALIBRE_MODE = process.env.CALIBRE_MODE || 'local';
+const CALIBRE_API_URL = process.env.CALIBRE_API_URL || 'http://localhost:8080';
+
+// Import calibre-node (for local mode)
 // Note: calibre-node requires Calibre to be installed on the system
 let calibre: any;
-try {
-  calibre = require('calibre-node');
-} catch (error) {
-  console.warn('calibre-node not available. Conversion features will be disabled.');
-  console.warn('Install Calibre from https://calibre-ebook.com/download');
+if (CALIBRE_MODE === 'local') {
+  try {
+    calibre = require('calibre-node');
+  } catch (error) {
+    console.warn('calibre-node not available. Conversion features will be disabled.');
+    console.warn('Install Calibre from https://calibre-ebook.com/download');
+    console.warn('Or use CALIBRE_MODE=remote with a Calibre service');
+  }
 }
 
 export class BookConverter {
@@ -47,8 +54,16 @@ export class BookConverter {
     targetFormat: BookFormat,
     sourcePath: string
   ): Promise<ConversionJob> {
-    if (!calibre) {
+    if (CALIBRE_MODE === 'local' && !calibre) {
       throw new Error('Calibre is not installed or calibre-node is not available');
+    }
+
+    if (CALIBRE_MODE === 'remote') {
+      // Check if remote service is available
+      const isAvailable = await this.checkRemoteService();
+      if (!isAvailable) {
+        throw new Error(`Calibre remote service not available at ${CALIBRE_API_URL}`);
+      }
     }
 
     if (!this.canConvert(sourceFormat, targetFormat)) {
@@ -115,23 +130,28 @@ export class BookConverter {
         throw new Error(`Source file not found: ${fullSourcePath}`);
       }
 
-      console.log(`Converting ${fullSourcePath} to ${fullTargetPath}`);
+      console.log(`Converting ${fullSourcePath} to ${fullTargetPath} (mode: ${CALIBRE_MODE})`);
 
-      // Perform conversion using calibre-node
-      await new Promise<void>((resolve, reject) => {
-        calibre.ebookConvert(
-          fullSourcePath,
-          fullTargetPath,
-          {},
-          (error: Error) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
+      // Perform conversion based on mode
+      if (CALIBRE_MODE === 'remote') {
+        await this.performRemoteConversion(job.sourcePath, job.targetPath);
+      } else {
+        // Local conversion using calibre-node
+        await new Promise<void>((resolve, reject) => {
+          calibre.ebookConvert(
+            fullSourcePath,
+            fullTargetPath,
+            {},
+            (error: Error) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve();
+              }
             }
-          }
-        );
-      });
+          );
+        });
+      }
 
       // Verify output file exists
       try {
@@ -212,9 +232,64 @@ export class BookConverter {
   }
 
   /**
+   * Check if remote Calibre service is available
+   */
+  private async checkRemoteService(): Promise<boolean> {
+    try {
+      const response = await fetch(`${CALIBRE_API_URL}/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Failed to connect to remote Calibre service:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Perform conversion using remote Calibre service
+   */
+  private async performRemoteConversion(
+    sourcePath: string,
+    targetPath: string
+  ): Promise<void> {
+    try {
+      const response = await fetch(`${CALIBRE_API_URL}/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source_path: sourcePath,
+          target_path: targetPath,
+        }),
+        signal: AbortSignal.timeout(300000), // 5 minute timeout
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Remote conversion failed');
+      }
+
+      const result = await response.json();
+      console.log('Remote conversion result:', result);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Remote conversion failed: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Check if Calibre is available
    */
   static isCalibreAvailable(): boolean {
+    if (CALIBRE_MODE === 'remote') {
+      // For remote mode, we'll check availability at runtime
+      return true;
+    }
     return !!calibre;
   }
 }

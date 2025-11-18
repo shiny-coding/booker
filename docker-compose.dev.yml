@@ -1,0 +1,25 @@
+version: '3.8'
+
+# Development Docker Compose
+# This runs only Calibre service for Windows development
+
+services:
+  calibre:
+    build:
+      context: .
+      dockerfile: Dockerfile.calibre
+    container_name: bookstore-calibre-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Calibre HTTP API
+    volumes:
+      # Mount your local library so Calibre can access the books
+      - ./library:/books
+    environment:
+      - CALIBRE_LIBRARY_PATH=/books
+    networks:
+      - bookstore-dev
+
+networks:
+  bookstore-dev:
+    driver: bridge
