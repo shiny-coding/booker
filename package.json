@@ -9,18 +9,32 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "calibre-node": "^0.3.3",
+    "chokidar": "^4.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "epub-metadata": "^0.2.0",
+    "lucide-react": "^0.554.0",
     "next": "16.0.3",
+    "next-auth": "^5.0.0-beta.30",
+    "nodemailer": "^7.0.10",
+    "pdf-parse": "^2.4.5",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "react-dropzone": "^14.3.8",
+    "sharp": "^0.34.5",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "tailwindcss": "^4",
+    "tw-animate-css": "^1.4.0",
     "typescript": "^5"
   }
 }
