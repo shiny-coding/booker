@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
 
     const metadataManager = getMetadataManager();
 
+    // Force reload from file to ensure fresh data
+    await metadataManager.load();
+
     let books = await metadataManager.getBooks();
 
     // Apply search

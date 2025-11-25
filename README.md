@@ -13,7 +13,7 @@ A Next.js application for managing and converting your ebook collection with a b
 - **💾 Metadata Caching**: Fast access with JSON-based metadata cache
 
 ### Format Support
-- **Supported Formats**: EPUB, PDF, MOBI, AZW, AZW3, TXT
+- **Supported Formats**: EPUB, PDF, MOBI, AZW, AZW3, TXT, DOCX
 - **Format Conversion**: Convert between formats using Calibre
 - **On-Demand Conversion**: Convert books to your preferred format when needed
 - **Download Options**: Download any available format with one click
@@ -168,6 +168,7 @@ public/
 - PDF → EPUB, TXT
 - MOBI/AZW → EPUB, PDF, AZW3, TXT
 - TXT → EPUB, PDF
+- DOCX → EPUB, PDF, AZW3, MOBI, TXT
 
 ### Downloading Books
 

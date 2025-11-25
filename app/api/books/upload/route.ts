@@ -8,6 +8,7 @@ import {
   generateBookFolderName,
   getFormatFromFilename,
   isSupportedFormat,
+  cleanUploadedFilename,
   type Book,
   type BookFormatInfo,
 } from '@/lib/types';
@@ -55,8 +56,8 @@ export async function POST(request: NextRequest) {
     // Create book folder
     await fs.mkdir(bookFolderPath, { recursive: true });
 
-    // Save file
-    const fileName = `${folderName}.${format}`;
+    // Save file with cleaned original filename
+    const fileName = cleanUploadedFilename(file.name);
     const filePath = path.join(bookFolderPath, fileName);
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);

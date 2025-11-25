@@ -24,6 +24,11 @@ export class BookScanner {
     const books: Book[] = [];
 
     try {
+      // Clear existing metadata before scanning
+      const metadataManager = getMetadataManager();
+      await metadataManager.clear();
+      console.log('Cleared existing metadata');
+
       // Read all book folders
       const entries = await fs.readdir(this.booksPath, { withFileTypes: true });
       const bookFolders = entries.filter((entry) => entry.isDirectory());
@@ -42,7 +47,6 @@ export class BookScanner {
       }
 
       // Update metadata
-      const metadataManager = getMetadataManager();
       for (const book of books) {
         await metadataManager.upsertBook(book);
       }

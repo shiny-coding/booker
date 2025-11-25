@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      jobId: job.id,
       job,
     });
   } catch (error) {

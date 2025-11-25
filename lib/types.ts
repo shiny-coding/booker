@@ -1,5 +1,5 @@
 // Book format types
-export type BookFormat = 'epub' | 'pdf' | 'azw3' | 'mobi' | 'azw' | 'txt';
+export type BookFormat = 'epub' | 'pdf' | 'azw3' | 'mobi' | 'azw' | 'txt' | 'docx';
 
 // Book format information
 export interface BookFormatInfo {
@@ -84,6 +84,7 @@ export const CONVERSION_MATRIX: Record<BookFormat, BookFormat[]> = {
   mobi: ['epub', 'pdf', 'azw3', 'txt'],
   azw: ['epub', 'pdf', 'azw3', 'txt'],
   txt: ['epub', 'pdf'],
+  docx: ['epub', 'pdf', 'azw3', 'mobi', 'txt'],
 };
 
 // File extensions mapping
@@ -94,10 +95,11 @@ export const FORMAT_EXTENSIONS: Record<BookFormat, string> = {
   mobi: '.mobi',
   azw: '.azw',
   txt: '.txt',
+  docx: '.docx',
 };
 
 // Supported upload formats
-export const SUPPORTED_FORMATS: BookFormat[] = ['epub', 'pdf', 'mobi', 'azw', 'azw3', 'txt'];
+export const SUPPORTED_FORMATS: BookFormat[] = ['epub', 'pdf', 'mobi', 'azw', 'azw3', 'txt', 'docx'];
 
 // Helper function to check if format is supported
 export function isSupportedFormat(format: string): format is BookFormat {
@@ -121,13 +123,44 @@ export function getFormatFromFilename(filename: string): BookFormat | null {
   return format || null;
 }
 
-// Helper function to sanitize filename
+// Helper function to sanitize filename (for folder names)
 export function sanitizeFilename(filename: string): string {
-  return filename
+  // Replace spaces and special chars with dashes, but keep unicode letters/numbers
+  let sanitized = filename
     .toLowerCase()
-    .replace(/[^a-z0-9-_.]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/\s+/g, '-') // Replace spaces with dashes
+    .replace(/[^\w\-_.]/g, '-') // Replace special chars but keep unicode word chars
+    .replace(/-+/g, '-') // Collapse multiple dashes
+    .replace(/^-|-$/g, ''); // Remove leading/trailing dashes
+
+  // If result is empty or too short, use a fallback
+  if (!sanitized || sanitized.length < 2) {
+    sanitized = 'book-' + Date.now();
+  }
+
+  return sanitized;
+}
+
+// Helper function to clean uploaded filenames (more lenient than sanitizeFilename)
+export function cleanUploadedFilename(filename: string): string {
+  // Split filename and extension
+  const lastDotIndex = filename.lastIndexOf('.');
+  const name = lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename;
+  const ext = lastDotIndex > 0 ? filename.substring(lastDotIndex) : '';
+
+  // Only remove truly problematic characters for filesystems
+  // Keep: letters, numbers, spaces, dashes, underscores, dots, parentheses, brackets
+  let cleaned = name
+    .replace(/[<>:"|?*\/\\]/g, '') // Remove filesystem-invalid characters
+    .replace(/\s+/g, ' ') // Normalize spaces
+    .trim();
+
+  // If result is empty, use a fallback
+  if (!cleaned || cleaned.length < 1) {
+    cleaned = 'book-' + Date.now();
+  }
+
+  return cleaned + ext;
 }
 
 // Helper function to generate book folder name
@@ -136,5 +169,8 @@ export function generateBookFolderName(title: string, author?: string): string {
   if (author) {
     parts.push(author);
   }
-  return sanitizeFilename(parts.join('-'));
+  const folderName = sanitizeFilename(parts.join('-'));
+
+  // Ensure we always have a valid folder name
+  return folderName || `book-${Date.now()}`;
 }

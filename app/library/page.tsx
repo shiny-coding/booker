@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BookCard } from '@/components/book-card';
 import { FilterPanel } from '@/components/filter-panel';
 import { UploadDialog } from '@/components/upload-dialog';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { signOut } from 'next-auth/react';
 import type { Book } from '@/lib/types';
 
@@ -120,6 +121,7 @@ export default function LibraryPage() {
             <Button onClick={handleScan} disabled={scanning} variant="outline">
               {scanning ? 'Scanning...' : 'Scan Library'}
             </Button>
+            <ThemeToggle />
             <Button onClick={() => signOut()} variant="outline">
               Sign Out
             </Button>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +36,7 @@ export function UploadDialog({ onUploadSuccess }: UploadDialogProps) {
       'application/x-mobipocket-ebook': ['.mobi'],
       'application/vnd.amazon.ebook': ['.azw', '.azw3'],
       'text/plain': ['.txt'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
     maxFiles: 1,
     onDrop: (acceptedFiles) => {
@@ -55,11 +57,12 @@ export function UploadDialog({ onUploadSuccess }: UploadDialogProps) {
     e.preventDefault();
 
     if (!file || !title || !author) {
-      alert('Please provide a file, title, and author');
+      toast.error('Please provide a file, title, and author');
       return;
     }
 
     setUploading(true);
+    const uploadToast = toast.loading('Uploading book...');
 
     try {
       const formData = new FormData();
@@ -75,17 +78,17 @@ export function UploadDialog({ onUploadSuccess }: UploadDialogProps) {
       });
 
       if (response.ok) {
-        alert('Book uploaded successfully!');
+        toast.success('Book uploaded successfully!', { id: uploadToast });
         setOpen(false);
         resetForm();
         onUploadSuccess();
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to upload book');
+        toast.error(data.error || 'Failed to upload book', { id: uploadToast });
       }
     } catch (error) {
       console.error('Error uploading:', error);
-      alert('Failed to upload book');
+      toast.error('Failed to upload book', { id: uploadToast });
     } finally {
       setUploading(false);
     }

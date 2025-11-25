@@ -9,19 +9,60 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validation
+    if (!name || !email || !password || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Register the user
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to register');
+        setLoading(false);
+        return;
+      }
+
+      // Auto sign in after successful registration
       const result = await signIn('credentials', {
         email,
         password,
@@ -29,14 +70,14 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError('Invalid email or password');
+        setError('Registration successful but failed to sign in. Please try logging in.');
+        setLoading(false);
       } else {
         router.push('/library');
         router.refresh();
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -46,20 +87,32 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Bookstore
+            Create an Account
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your library
+            Enter your information to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@bookstore.local"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -71,9 +124,21 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Re-enter your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
               />
@@ -84,18 +149,14 @@ export default function LoginPage() {
               </div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Creating account...' : 'Register'}
             </Button>
 
             <div className="text-sm text-center mt-4">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-primary hover:underline font-medium">
-                Register
+              Already have an account?{' '}
+              <Link href="/login" className="text-primary hover:underline font-medium">
+                Sign in
               </Link>
-            </div>
-
-            <div className="text-xs text-center text-muted-foreground mt-2">
-              Default credentials: admin@bookstore.local / admin123
             </div>
           </form>
         </CardContent>

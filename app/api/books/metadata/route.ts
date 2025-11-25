@@ -12,6 +12,9 @@ export async function GET() {
   try {
     const metadataManager = getMetadataManager();
 
+    // Force reload from file to ensure fresh data
+    await metadataManager.load();
+
     const [tags, authors] = await Promise.all([
       metadataManager.getAllTags(),
       metadataManager.getAllAuthors(),

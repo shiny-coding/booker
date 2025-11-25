@@ -86,7 +86,8 @@ export class BookConverter {
       sourcePath,
       path.extname(sourcePath)
     ) + getExtension(targetFormat);
-    const targetPath = path.join(path.dirname(sourcePath), targetFileName);
+    // Normalize path to use forward slashes (Unix-style) for cross-platform compatibility
+    const targetPath = path.join(path.dirname(sourcePath), targetFileName).replace(/\\/g, '/');
 
     const job: ConversionJob = {
       id: jobId,
@@ -255,14 +256,19 @@ export class BookConverter {
     targetPath: string
   ): Promise<void> {
     try {
+      // For remote mode, prepend 'books/' since Docker mounts ./library:/books
+      // and our files are in library/books/
+      const remoteSourcePath = `books/${sourcePath}`;
+      const remoteTargetPath = `books/${targetPath}`;
+
       const response = await fetch(`${CALIBRE_API_URL}/convert`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          source_path: sourcePath,
-          target_path: targetPath,
+          source_path: remoteSourcePath,
+          target_path: remoteTargetPath,
         }),
         signal: AbortSignal.timeout(300000), // 5 minute timeout
       });
