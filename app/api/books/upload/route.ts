@@ -68,9 +68,11 @@ export async function POST(request: NextRequest) {
 
     // Create book metadata
     const bookId = uuidv4();
+    // Always use forward slashes in stored paths for cross-platform compatibility
+    const relativeFilePath = `${folderName}/${fileName}`;
     const formatInfo: BookFormatInfo = {
       format,
-      filePath: path.join(folderName, fileName),
+      filePath: relativeFilePath,
       fileName,
       fileSize: stats.size,
       isOriginal: true,

@@ -35,7 +35,9 @@ export async function DELETE(
 
     // Delete all format files
     for (const format of book.formats) {
-      const filePath = path.join(booksPath, format.filePath);
+      // Normalize path separators (handle Windows backslashes)
+      const normalizedFilePath = format.filePath.replace(/\\/g, '/');
+      const filePath = path.join(booksPath, normalizedFilePath);
       try {
         await fs.unlink(filePath);
       } catch (error) {
@@ -46,9 +48,10 @@ export async function DELETE(
 
     // Try to delete the book's directory if it exists and is empty
     if (book.formats.length > 0) {
+      const normalizedFirstPath = book.formats[0].filePath.replace(/\\/g, '/');
       const bookDir = path.join(
         booksPath,
-        path.dirname(book.formats[0].filePath)
+        path.dirname(normalizedFirstPath)
       );
       try {
         await fs.rmdir(bookDir);

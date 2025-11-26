@@ -49,7 +49,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     const booksPath = process.env.BOOKS_PATH || './library/books';
-    const filePath = path.join(booksPath, formatInfo.filePath);
+    // Normalize path separators (handle Windows backslashes)
+    const normalizedFilePath = formatInfo.filePath.replace(/\\/g, '/');
+    const filePath = path.join(booksPath, normalizedFilePath);
 
     // Delete the file
     try {

@@ -18,7 +18,6 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [scanning, setScanning] = useState(false);
 
@@ -29,7 +28,7 @@ export default function LibraryPage() {
 
   useEffect(() => {
     filterBooks();
-  }, [books, search, selectedTags, selectedFormats]);
+  }, [books, search, selectedTags]);
 
   const fetchBooks = async () => {
     try {
@@ -93,15 +92,6 @@ export default function LibraryPage() {
       );
     }
 
-    // Formats filter
-    if (selectedFormats.length > 0) {
-      filtered = filtered.filter((book) =>
-        selectedFormats.some((format) =>
-          book.formats.some((f) => f.format === format)
-        )
-      );
-    }
-
     setFilteredBooks(filtered);
   };
 
@@ -149,9 +139,7 @@ export default function LibraryPage() {
             <FilterPanel
               availableTags={availableTags}
               selectedTags={selectedTags}
-              selectedFormats={selectedFormats}
               onTagsChange={setSelectedTags}
-              onFormatsChange={setSelectedFormats}
             />
           </aside>
 

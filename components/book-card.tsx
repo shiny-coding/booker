@@ -14,13 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -30,9 +23,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Trash2 } from 'lucide-react';
-import type { Book, BookFormat } from '@/lib/types';
-import { CONVERSION_MATRIX } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, Trash2, Share2, Copy, Check, Download, Code } from 'lucide-react';
+import type { Book, BookFormat, BookFormatInfo } from '@/lib/types';
+import { CONVERSION_MATRIX, SUPPORTED_FORMATS } from '@/lib/types';
 
 interface BookCardProps {
   book: Book;
@@ -50,7 +44,13 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
   const [conversionJobs, setConversionJobs] = useState<ConversionJob[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteBookDialogOpen, setDeleteBookDialogOpen] = useState(false);
-  const [formatToDelete, setFormatToDelete] = useState<BookFormat | null>(null);
+  const [formatToDelete, setFormatToDelete] = useState<BookFormatInfo | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showEmbed, setShowEmbed] = useState(false);
+  const [copiedEmbed, setCopiedEmbed] = useState(false);
 
   const handleDownload = async (format: BookFormat) => {
     const downloadToast = toast.loading(`Downloading ${format.toUpperCase()}...`);
@@ -217,12 +217,99 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
     }
   };
 
-  const getAvailableConversions = (sourceFormat: BookFormat): BookFormat[] => {
-    const availableFormats = CONVERSION_MATRIX[sourceFormat] || [];
-    // Filter out formats that already exist
-    return availableFormats.filter(
-      (format) => !book.formats.some((f) => f.format === format)
-    );
+  const handleShare = async () => {
+    setSharing(true);
+    setCopied(false);
+
+    try {
+      const response = await fetch(`/api/books/${book.id}/share`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setShareUrl(data.shareUrl);
+        setShareToken(data.token);
+        // Copy to clipboard immediately
+        await navigator.clipboard.writeText(data.shareUrl);
+        setCopied(true);
+        toast.success('Share link copied to clipboard');
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to create share link');
+      }
+    } catch (error) {
+      console.error('Error creating share link:', error);
+      toast.error('Failed to create share link');
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleCopyShareUrl = async () => {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success('Link copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  // Get all formats that this book can potentially have (existing + convertible)
+  const getAllPossibleFormats = (): BookFormat[] => {
+    const existingFormats = new Set(book.formats.map((f) => f.format));
+    const convertibleFormats = new Set<BookFormat>();
+
+    // For each existing format, add what it can be converted to
+    book.formats.forEach((f) => {
+      const targets = CONVERSION_MATRIX[f.format] || [];
+      targets.forEach((t) => convertibleFormats.add(t));
+    });
+
+    // Combine existing and convertible, maintaining a consistent order
+    const allFormats = new Set<BookFormat>([...existingFormats, ...convertibleFormats]);
+    const formatOrder: BookFormat[] = ['epub', 'pdf', 'azw3', 'mobi', 'txt', 'docx', 'azw'];
+    return formatOrder.filter((f) => allFormats.has(f));
+  };
+
+  // Find the best source format to convert from for a target format
+  const getBestSourceFormat = (targetFormat: BookFormat): BookFormat | null => {
+    for (const existingFormat of book.formats) {
+      const canConvert = CONVERSION_MATRIX[existingFormat.format]?.includes(targetFormat);
+      if (canConvert) {
+        return existingFormat.format;
+      }
+    }
+    return null;
+  };
+
+  // Check if a format is currently being converted
+  const isFormatConverting = (format: BookFormat): boolean => {
+    return conversionJobs.some((job) => job.targetFormat === format);
+  };
+
+  // Handle checkbox click for format conversion or deletion
+  const handleFormatToggle = (format: BookFormat, checked: boolean) => {
+    if (checked) {
+      // Format doesn't exist, need to convert
+      const sourceFormat = getBestSourceFormat(format);
+      if (sourceFormat) {
+        handleConvert(sourceFormat, format);
+      }
+    } else {
+      // Unchecking = delete format (show confirmation)
+      const formatInfo = book.formats.find((f) => f.format === format);
+      if (formatInfo && book.formats.length > 1) {
+        setFormatToDelete(formatInfo);
+        setDeleteDialogOpen(true);
+      }
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -242,12 +329,35 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
           <CardDescription>{book.author}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-1 mb-3">
-            {book.formats.map((format) => (
-              <Badge key={format.format} variant="secondary">
-                {format.format.toUpperCase()}
-              </Badge>
-            ))}
+          {/* Format checkboxes */}
+          <div className="flex flex-wrap gap-3 mb-3" onClick={(e) => e.stopPropagation()}>
+            {getAllPossibleFormats().map((format) => {
+              const exists = book.formats.some((f) => f.format === format);
+              const converting = isFormatConverting(format);
+              const canDelete = exists && book.formats.length > 1;
+
+              return (
+                <div key={format} className="flex items-center gap-1.5">
+                  {converting ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Checkbox
+                      checked={exists}
+                      disabled={exists && !canDelete}
+                      onCheckedChange={(checked) => handleFormatToggle(format, checked as boolean)}
+                    />
+                  )}
+                  <span
+                    className={`text-xs font-medium select-none ${
+                      exists ? 'text-foreground cursor-pointer hover:underline' : 'text-muted-foreground'
+                    }`}
+                    onClick={() => exists && handleDownload(format)}
+                  >
+                    {format.toUpperCase()}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
           {/* Conversion progress in collapsed view */}
@@ -256,7 +366,6 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
               {conversionJobs.map((job) => (
                 <div key={job.id} className="space-y-1">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
                     <span>Converting to {job.targetFormat.toUpperCase()}</span>
                     <span className="ml-auto font-medium">{job.progress}%</span>
                   </div>
@@ -267,7 +376,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
           )}
 
           {book.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 mb-3">
               {book.tags.slice(0, 3).map((tag) => (
                 <Badge key={tag} variant="outline" className="text-xs">
                   {tag}
@@ -280,10 +389,72 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
               )}
             </div>
           )}
+
+          {/* Share and Embed buttons */}
+          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1"
+              onClick={handleShare}
+              disabled={sharing}
+            >
+              {sharing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Share2 className="h-4 w-4 mr-2" />
+              )}
+              {sharing ? 'Creating...' : 'Share'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1"
+              disabled={sharing}
+              onClick={async () => {
+                let token = shareToken;
+                // Create share link first if needed
+                if (!token) {
+                  try {
+                    const response = await fetch(`/api/books/${book.id}/share`, {
+                      method: 'POST',
+                    });
+                    if (response.ok) {
+                      const data = await response.json();
+                      setShareUrl(data.shareUrl);
+                      setShareToken(data.token);
+                      token = data.token;
+                    } else {
+                      toast.error('Failed to create share link');
+                      return;
+                    }
+                  } catch {
+                    toast.error('Failed to create share link');
+                    return;
+                  }
+                }
+                const code = `<iframe src="${window.location.origin}/api/embed/${token}" width="420" height="${280 + book.formats.length * 56}" frameborder="0" style="border-radius: 12px; max-width: 100%;"></iframe>`;
+                await navigator.clipboard.writeText(code);
+                toast.success('Embed code copied');
+              }}
+            >
+              <Code className="h-4 w-4 mr-2" />
+              Embed
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      <Dialog open={expanded} onOpenChange={setExpanded}>
+      <Dialog open={expanded} onOpenChange={(open) => {
+        setExpanded(open);
+        if (!open) {
+          setShareUrl(null);
+          setShareToken(null);
+          setCopied(false);
+          setShowEmbed(false);
+          setCopiedEmbed(false);
+        }
+      }}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">{book.title}</DialogTitle>
@@ -313,10 +484,133 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
               </div>
             )}
 
-            {/* Available Formats */}
+            {/* Share Link */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Available Formats</h3>
+              <h3 className="font-semibold mb-2">Share</h3>
+              <div className="flex items-center gap-2">
+                {shareUrl ? (
+                  <>
+                    <input
+                      type="text"
+                      value={shareUrl}
+                      readOnly
+                      className="flex-1 px-3 py-2 text-sm border rounded-md bg-muted"
+                      onClick={(e) => e.currentTarget.select()}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCopyShareUrl}
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleShare}
+                    disabled={sharing}
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    {sharing ? 'Creating link...' : 'Create Share Link'}
+                  </Button>
+                )}
+              </div>
+              {shareUrl && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Anyone with this link can download any format of this book.
+                </p>
+              )}
+
+              {/* Embed Code */}
+              {shareToken && (
+                <div className="mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowEmbed(!showEmbed)}
+                    className="w-full"
+                  >
+                    <Code className="h-4 w-4 mr-2" />
+                    {showEmbed ? 'Hide Embed Code' : 'Get Embed Code'}
+                  </Button>
+
+                  {showEmbed && (
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">Iframe (Auto theme)</label>
+                        <div className="relative">
+                          <textarea
+                            readOnly
+                            className="w-full h-16 p-2 text-xs font-mono border rounded-md bg-muted resize-none"
+                            value={`<iframe src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/embed/${shareToken}" width="420" height="${280 + book.formats.length * 56}" frameborder="0" style="border-radius: 12px; max-width: 100%;"></iframe>`}
+                            onClick={(e) => e.currentTarget.select()}
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="absolute top-1 right-1 h-6 w-6 p-0"
+                            onClick={async () => {
+                              const code = `<iframe src="${window.location.origin}/api/embed/${shareToken}" width="420" height="${280 + book.formats.length * 56}" frameborder="0" style="border-radius: 12px; max-width: 100%;"></iframe>`;
+                              await navigator.clipboard.writeText(code);
+                              setCopiedEmbed(true);
+                              toast.success('Embed code copied');
+                              setTimeout(() => setCopiedEmbed(false), 2000);
+                            }}
+                          >
+                            {copiedEmbed ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Detects <code className="bg-muted px-1 rounded text-[10px]">color-theme-4</code> or <code className="bg-muted px-1 rounded text-[10px]">dark</code> class.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs"
+                          onClick={async () => {
+                            const code = `<iframe src="${window.location.origin}/api/embed/${shareToken}?theme=light" width="420" height="${280 + book.formats.length * 56}" frameborder="0" style="border-radius: 12px; max-width: 100%;"></iframe>`;
+                            await navigator.clipboard.writeText(code);
+                            setCopiedEmbed(true);
+                            toast.success('Light embed copied');
+                            setTimeout(() => setCopiedEmbed(false), 2000);
+                          }}
+                        >
+                          Copy Light
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs"
+                          onClick={async () => {
+                            const code = `<iframe src="${window.location.origin}/api/embed/${shareToken}?theme=dark" width="420" height="${280 + book.formats.length * 56}" frameborder="0" style="border-radius: 12px; max-width: 100%;"></iframe>`;
+                            await navigator.clipboard.writeText(code);
+                            setCopiedEmbed(true);
+                            toast.success('Dark embed copied');
+                            setTimeout(() => setCopiedEmbed(false), 2000);
+                          }}
+                        >
+                          Copy Dark
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Formats */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold">Formats</h3>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -329,109 +623,85 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
                   Delete Book
                 </Button>
               </div>
-              <div className="space-y-2">
-                {book.formats.map((format) => {
-                  const availableConversions = getAvailableConversions(format.format);
 
-                  return (
-                    <div
-                      key={format.format}
-                      className="flex items-start justify-between p-3 border rounded-lg gap-3"
-                    >
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <Badge className="shrink-0 mt-0.5">{format.format.toUpperCase()}</Badge>
-                        <div className="text-sm min-w-0 flex-1">
-                          <div className="font-medium break-words">{format.fileName}</div>
-                          <div className="text-muted-foreground">
-                            {formatFileSize(format.fileSize)}
-                            {format.isOriginal && (
-                              <span className="ml-2 text-xs">(Original)</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownload(format.format);
-                          }}
-                        >
-                          Download
-                        </Button>
-
-                        {availableConversions.length > 0 && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={conversionJobs.length > 0}
-                              >
-                                {conversionJobs.length > 0 ? 'Converting...' : 'Convert'}
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              {availableConversions.map((targetFormat) => (
-                                <DropdownMenuItem
-                                  key={targetFormat}
-                                  onClick={() => handleConvert(format.format, targetFormat)}
-                                >
-                                  Convert to {targetFormat.toUpperCase()}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-
-                        {/* Only allow deletion if book has multiple formats */}
-                        {book.formats.length > 1 && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFormatToDelete(format);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Ongoing Conversions */}
-            {conversionJobs.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2">Converting</h3>
-                <div className="space-y-2">
+              {/* Conversion progress */}
+              {conversionJobs.length > 0 && (
+                <div className="space-y-2 mb-4">
                   {conversionJobs.map((job) => (
                     <div
                       key={job.id}
-                      className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50"
+                      className="flex items-center gap-3 p-2 border rounded-lg bg-muted/30"
                     >
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium mb-1">
+                      <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-muted-foreground mb-1">
                           Converting to {job.targetFormat.toUpperCase()}
                         </div>
-                        <Progress value={job.progress} className="h-2" />
+                        <Progress value={job.progress} className="h-1.5" />
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <span className="text-xs text-muted-foreground shrink-0">
                         {job.progress}%
-                      </div>
+                      </span>
                     </div>
                   ))}
                 </div>
+              )}
+
+              {/* Formats table */}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="w-10 px-3 py-2"></th>
+                      <th className="text-left px-3 py-2 font-medium">Format</th>
+                      <th className="text-left px-3 py-2 font-medium">Size</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getAllPossibleFormats().map((format) => {
+                      const formatInfo = book.formats.find((f) => f.format === format);
+                      const exists = !!formatInfo;
+                      const converting = isFormatConverting(format);
+                      // Can only uncheck if more than one format exists
+                      const canDelete = exists && book.formats.length > 1;
+
+                      return (
+                        <tr
+                          key={format}
+                          className={`border-t ${exists ? '' : 'text-muted-foreground'}`}
+                        >
+                          <td className="px-3 py-2">
+                            {converting ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Checkbox
+                                checked={exists}
+                                disabled={exists && !canDelete}
+                                onCheckedChange={(checked) => handleFormatToggle(format, checked as boolean)}
+                              />
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span
+                              className={`select-none font-medium ${exists ? 'cursor-pointer hover:underline' : ''}`}
+                              onClick={() => exists && handleDownload(format)}
+                            >
+                              {format.toUpperCase()}
+                              {formatInfo?.isOriginal && (
+                                <span className="ml-2 text-xs text-muted-foreground">(Original)</span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">
+                            {formatInfo ? formatFileSize(formatInfo.fileSize) : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            )}
+            </div>
 
             {/* Metadata */}
             <div className="text-xs text-muted-foreground">

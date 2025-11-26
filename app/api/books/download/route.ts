@@ -40,16 +40,20 @@ export async function GET(request: NextRequest) {
     }
 
     const booksPath = process.env.BOOKS_PATH || './library/books';
-    const filePath = path.join(booksPath, formatInfo.filePath);
+    // Normalize path separators (handle Windows backslashes)
+    const normalizedFilePath = formatInfo.filePath.replace(/\\/g, '/');
+    const filePath = path.join(booksPath, normalizedFilePath);
 
     try {
       const fileBuffer = await fs.readFile(filePath);
 
       const headers = new Headers();
       headers.set('Content-Type', getContentType(format));
+      // Encode filename for Content-Disposition header (RFC 5987)
+      const encodedFilename = encodeURIComponent(formatInfo.fileName);
       headers.set(
         'Content-Disposition',
-        `attachment; filename="${formatInfo.fileName}"`
+        `attachment; filename*=UTF-8''${encodedFilename}`
       );
       headers.set('Content-Length', String(fileBuffer.length));
 

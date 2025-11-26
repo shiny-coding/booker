@@ -4,22 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { SUPPORTED_FORMATS } from '@/lib/types';
 
 interface FilterPanelProps {
   availableTags: string[];
   selectedTags: string[];
-  selectedFormats: string[];
   onTagsChange: (tags: string[]) => void;
-  onFormatsChange: (formats: string[]) => void;
 }
 
 export function FilterPanel({
   availableTags,
   selectedTags,
-  selectedFormats,
   onTagsChange,
-  onFormatsChange,
 }: FilterPanelProps) {
   const handleTagToggle = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -29,47 +24,14 @@ export function FilterPanel({
     }
   };
 
-  const handleFormatToggle = (format: string) => {
-    if (selectedFormats.includes(format)) {
-      onFormatsChange(selectedFormats.filter((f) => f !== format));
-    } else {
-      onFormatsChange([...selectedFormats, format]);
-    }
-  };
-
   const clearAllFilters = () => {
     onTagsChange([]);
-    onFormatsChange([]);
   };
 
-  const hasFilters = selectedTags.length > 0 || selectedFormats.length > 0;
+  const hasFilters = selectedTags.length > 0;
 
   return (
     <div className="space-y-4">
-      {/* Formats Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Formats</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {SUPPORTED_FORMATS.map((format) => (
-            <div key={format} className="flex items-center space-x-2">
-              <Checkbox
-                id={`format-${format}`}
-                checked={selectedFormats.includes(format)}
-                onCheckedChange={() => handleFormatToggle(format)}
-              />
-              <Label
-                htmlFor={`format-${format}`}
-                className="text-sm font-normal cursor-pointer"
-              >
-                {format.toUpperCase()}
-              </Label>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
       {/* Tags Filter */}
       {availableTags.length > 0 && (
         <Card>

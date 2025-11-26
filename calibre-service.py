@@ -57,6 +57,18 @@ def convert():
         full_source = os.path.join(BOOKS_BASE, source_path)
         full_target = os.path.join(BOOKS_BASE, target_path)
 
+        print(f"Looking for source file: {full_source}")
+        print(f"Source path exists: {os.path.exists(full_source)}")
+
+        # List directory contents for debugging
+        source_dir = os.path.dirname(full_source)
+        if os.path.exists(source_dir):
+            print(f"Contents of {source_dir}:")
+            for f in os.listdir(source_dir):
+                print(f"  - {f}")
+        else:
+            print(f"Source directory does not exist: {source_dir}")
+
         # Verify source exists
         if not os.path.exists(full_source):
             return jsonify({
@@ -76,19 +88,31 @@ def convert():
             if value is not True:
                 cmd.append(str(value))
 
-        # Run conversion
+        # Run conversion with xvfb-run for PDF (Qt WebEngine needs a display)
+        target_ext = os.path.splitext(full_target)[1].lower()
+        env = os.environ.copy()
+        if target_ext == '.pdf':
+            cmd = ['xvfb-run', '-a', '--server-args=-screen 0 1024x768x24'] + cmd
+            # Disable Chromium sandbox (required when running as root in container)
+            env['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox --disable-gpu'
+
         print(f"Running: {' '.join(cmd)}")
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=300  # 5 minute timeout
+            timeout=300,  # 5 minute timeout
+            env=env
         )
 
         if result.returncode != 0:
+            print(f"Conversion failed with return code {result.returncode}")
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
             return jsonify({
                 'error': 'Conversion failed',
-                'details': result.stderr
+                'details': result.stderr,
+                'stdout': result.stdout
             }), 500
 
         # Verify output exists

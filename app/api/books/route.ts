@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (tags || formats || author) {
-      books = await metadataManager.filterBooks({ tags, formats, author });
+      books = await metadataManager.filterBooks({ tags, formats, author: author || undefined });
     }
 
     return NextResponse.json({ books });

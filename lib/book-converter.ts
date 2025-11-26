@@ -121,8 +121,11 @@ export class BookConverter {
       job.startedAt = new Date();
       this.jobs.set(job.id, job);
 
-      const fullSourcePath = path.join(this.booksPath, job.sourcePath);
-      const fullTargetPath = path.join(this.booksPath, job.targetPath);
+      // Normalize path separators (handle Windows backslashes)
+      const normalizedSourcePath = job.sourcePath.replace(/\\/g, '/');
+      const normalizedTargetPath = job.targetPath.replace(/\\/g, '/');
+      const fullSourcePath = path.join(this.booksPath, normalizedSourcePath);
+      const fullTargetPath = path.join(this.booksPath, normalizedTargetPath);
 
       // Check if source file exists
       try {
@@ -135,7 +138,7 @@ export class BookConverter {
 
       // Perform conversion based on mode
       if (CALIBRE_MODE === 'remote') {
-        await this.performRemoteConversion(job.sourcePath, job.targetPath);
+        await this.performRemoteConversion(normalizedSourcePath, normalizedTargetPath);
       } else {
         // Local conversion using calibre-node
         await new Promise<void>((resolve, reject) => {
