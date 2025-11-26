@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { registerUser, userExists } from '@/auth';
+import { registerUser, userExists } from '@/lib/user-store';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password } = body;
 
     // Validate input
-    if (!email || !password || !name) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email, password, and name are required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Register the user
-    const user = await registerUser(email, password, name);
+    const user = registerUser(email, password);
 
     return NextResponse.json(
       {
@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
-          name: user.name,
         },
       },
       { status: 201 }
