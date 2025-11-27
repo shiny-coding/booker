@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
+    // Verify ownership
+    if (book.userId !== session.user?.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const formatInfo = book.formats.find((f) => f.format === format);
 
     if (!formatInfo) {

@@ -30,6 +30,11 @@ export async function POST(
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
+    // Verify ownership
+    if (book.userId !== session.user?.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const shareManager = getShareManager();
     const shareToken = await shareManager.createShareToken(bookId);
 
@@ -73,6 +78,18 @@ export async function DELETE(
         { error: 'Missing book ID' },
         { status: 400 }
       );
+    }
+
+    // Verify ownership
+    const metadataManager = getMetadataManager();
+    const book = await metadataManager.getBook(bookId);
+
+    if (!book) {
+      return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+    }
+
+    if (book.userId !== session.user?.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const shareManager = getShareManager();

@@ -17,20 +17,30 @@ export async function GET(request: NextRequest) {
     const author = searchParams.get('author');
 
     const metadataManager = getMetadataManager();
+    const userId = session.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
+    }
 
     // Force reload from file to ensure fresh data
     await metadataManager.load();
 
     let books = await metadataManager.getBooks();
 
+    // Filter by current user
+    books = books.filter((book) => book.userId === userId);
+
     // Apply search
     if (search) {
-      books = await metadataManager.searchBooks(search);
+      const searchResults = await metadataManager.searchBooks(search);
+      books = searchResults.filter((book) => book.userId === userId);
     }
 
     // Apply filters
     if (tags || formats || author) {
-      books = await metadataManager.filterBooks({ tags, formats, author: author || undefined });
+      const filteredBooks = await metadataManager.filterBooks({ tags, formats, author: author || undefined });
+      books = filteredBooks.filter((book) => book.userId === userId);
     }
 
     return NextResponse.json({ books });

@@ -210,10 +210,13 @@ export class MetadataManager {
   }
 
   /**
-   * Get all unique tags
+   * Get all unique tags (optionally filtered by userId)
    */
-  async getAllTags(): Promise<string[]> {
-    const books = await this.getBooks();
+  async getAllTags(userId?: string): Promise<string[]> {
+    let books = await this.getBooks();
+    if (userId) {
+      books = books.filter((book) => book.userId === userId);
+    }
     const tagsSet = new Set<string>();
 
     books.forEach((book) => {
@@ -224,10 +227,13 @@ export class MetadataManager {
   }
 
   /**
-   * Get all unique authors
+   * Get all unique authors (optionally filtered by userId)
    */
-  async getAllAuthors(): Promise<string[]> {
-    const books = await this.getBooks();
+  async getAllAuthors(userId?: string): Promise<string[]> {
+    let books = await this.getBooks();
+    if (userId) {
+      books = books.filter((book) => book.userId === userId);
+    }
     const authorsSet = new Set<string>();
 
     books.forEach((book) => {

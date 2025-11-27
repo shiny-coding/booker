@@ -14,6 +14,7 @@ export interface BookFormatInfo {
 // Book metadata
 export interface Book {
   id: string;
+  userId?: string; // Optional for legacy/scanned books
   title: string;
   author: string;
   tags: string[];

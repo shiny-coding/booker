@@ -31,6 +31,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
+    // Verify ownership
+    if (book.userId !== session.user?.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const booksPath = process.env.BOOKS_PATH || './library/books';
 
     // Delete all format files

@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     xz-utils \
     ca-certificates \
+    curl \
     locales \
     # X11 and Qt WebEngine dependencies for PDF output
     xvfb \

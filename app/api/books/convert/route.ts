@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convertBookFormat, isConversionAvailable } from '@/lib/book-converter';
+import { getMetadataManager } from '@/lib/metadata-manager';
 import { auth } from '@/auth';
 import { BookFormat } from '@/lib/types';
 
@@ -29,6 +30,18 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Verify ownership
+    const metadataManager = getMetadataManager();
+    const book = await metadataManager.getBook(bookId);
+
+    if (!book) {
+      return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+    }
+
+    if (book.userId !== session.user?.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const job = await convertBookFormat(

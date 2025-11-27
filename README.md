@@ -1,317 +1,228 @@
-# Bookstore - Personal Ebook Library Manager
+# Booker
 
-A Next.js application for managing and converting your ebook collection with a beautiful, modern interface.
+A self-hosted ebook library manager with format conversion, sharing, and embedding capabilities.
+
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8)
 
 ## Features
 
-### Core Functionality
-- **📚 Book Management**: Upload, organize, and browse your ebook collection
-- **🔍 Advanced Search & Filtering**: Search by title, author, or tags; filter by format and tags
-- **📱 Mobile-First Design**: Responsive interface optimized for phones and tablets
-- **🔐 Secure Authentication**: JWT-based authentication with NextAuth
-- **📂 File-Based Storage**: Books stored in organized filesystem structure
-- **💾 Metadata Caching**: Fast access with JSON-based metadata cache
-
-### Format Support
-- **Supported Formats**: EPUB, PDF, MOBI, AZW, AZW3, TXT, DOCX
-- **Format Conversion**: Convert between formats using Calibre
-- **On-Demand Conversion**: Convert books to your preferred format when needed
-- **Download Options**: Download any available format with one click
-
-### User Interface
-- **Book Grid View**: Clean, card-based layout with cover images (optional)
-- **Expandable Details**: Click any book to see full details and available formats
-- **Drag & Drop Upload**: Easy book uploads with automatic metadata extraction
-- **Real-Time Filtering**: Instant results as you type or select filters
-- **Dark Mode**: Full dark mode support via Tailwind CSS
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4
-- **UI Components**: shadcn/ui
-- **Authentication**: NextAuth.js v5 (JWT)
-- **Format Conversion**: Calibre (via calibre-node)
-- **File Uploads**: react-dropzone
-
-## Prerequisites
-
-### Required
-- Node.js 20.11+ (for the application)
-- npm or yarn
-
-### Optional (for format conversion)
-- [Calibre](https://calibre-ebook.com/download) - Required for ebook format conversion
+- **Library Management** - Upload, organize, and manage your ebook collection
+- **Format Conversion** - Convert between EPUB, PDF, MOBI, AZW3, TXT, DOCX using Calibre
+- **Public Sharing** - Generate shareable links for books that anyone can access
+- **Embeddable Widgets** - Embed book download cards on other websites via iframe
+- **Dark Mode** - Full dark/light theme support with toggle
+- **Responsive UI** - Works on desktop and mobile
 
 ## Quick Start
 
-### Windows Development
+### Docker (Recommended)
 
-**For Windows developers**, see the comprehensive **[WINDOWS-DEV.md](WINDOWS-DEV.md)** guide for:
-- Running Calibre in Docker/WSL2 (recommended)
-- Native Windows Calibre installation
-- Development scripts and troubleshooting
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/booker.git
+cd booker
 
-Quick start for Windows with Docker Calibre:
-```powershell
-# Start everything (Calibre + Dev server)
-.\scripts\dev-start.ps1
+# Copy environment file
+cp .env.example .env
+
+# Generate and add secret key
+openssl rand -base64 32
+# Edit .env and set NEXTAUTH_SECRET to the generated value
+
+# Start everything
+docker compose up -d
 ```
 
-### Local Development (macOS/Linux)
+Open [http://localhost:3000](http://localhost:3000) and register an account.
 
-### 1. Install dependencies
+### Development Setup
+
 ```bash
+# Install dependencies
 npm install
-```
 
-### 2. Set up environment variables
-Copy the example env file:
-```bash
+# Copy environment file
 cp .env.local.example .env.local
-```
 
-Edit `.env.local` and update:
-```env
-NEXTAUTH_SECRET=your-secret-key-here
-# Generate a secret with: openssl rand -base64 32
-```
+# Generate a secret key and add to .env.local
+openssl rand -base64 32
 
-### 3. Install Calibre (optional, for conversion)
-Download and install Calibre from https://calibre-ebook.com/download
+# Start the Calibre conversion service
+docker compose up -d calibre
 
-Make sure `ebook-convert` is in your system PATH, or set `CALIBRE_PATH` in `.env.local`.
-
-### 4. Run the development server
-```bash
+# Start the development server
 npm run dev
 ```
-
-Visit http://localhost:3000
-
-### Production Deployment (Ubuntu Server)
-
-For deploying to Ubuntu server with Docker:
-
-```bash
-# Quick deploy (Ubuntu)
-cd bookstore
-./scripts/deploy.sh
-```
-
-This will:
-- Install Docker and Docker Compose (if needed)
-- Generate secure environment variables
-- Build the Docker image with Calibre included
-- Start the application on port 3000
-
-For detailed deployment instructions including:
-- Docker deployment (recommended)
-- Direct Ubuntu installation
-- Nginx reverse proxy setup
-- SSL/HTTPS configuration
-- PM2 process management
-
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete guide.
-
-## Usage
-
-### First Time Setup
-
-1. **Login**: Use the default credentials:
-   - Email: `admin@bookstore.local`
-   - Password: `admin123`
-
-2. **Add Books**: You have two options:
-   - **Upload**: Click "Upload Book" to add files via drag & drop
-   - **Scan**: Click "Scan Library" to detect books in `library/books/` folder
-
-### File System Structure
-
-Books are stored in the following structure:
-```
-library/
-├── metadata.json           # Book metadata cache
-└── books/
-    ├── the-great-gatsby/
-    │   ├── the-great-gatsby.epub  (original)
-    │   ├── the-great-gatsby.pdf   (converted)
-    │   └── the-great-gatsby.azw3  (converted)
-    └── 1984-george-orwell/
-        ├── 1984-george-orwell.pdf  (original)
-        └── 1984-george-orwell.epub (converted)
-
-public/
-└── covers/
-    ├── the-great-gatsby.jpg
-    └── 1984-george-orwell.jpg
-```
-
-### Adding Books Manually
-
-1. Create a folder in `library/books/` with the format: `book-title` or `book-title-author-name`
-2. Place your ebook file(s) in that folder
-3. (Optional) Add a cover image to `public/covers/` with the same folder name
-4. Click "Scan Library" to detect the new books
-
-### Converting Formats
-
-1. Click on any book card to open details
-2. Find the format you want to convert from
-3. Click the "Convert" dropdown
-4. Select the target format
-5. Wait for conversion to complete (usually 10-30 seconds)
-
-**Conversion Matrix**:
-- EPUB → PDF, AZW3, MOBI, TXT
-- PDF → EPUB, TXT
-- MOBI/AZW → EPUB, PDF, AZW3, TXT
-- TXT → EPUB, PDF
-- DOCX → EPUB, PDF, AZW3, MOBI, TXT
-
-### Downloading Books
-
-1. Click on a book card to open details
-2. Click "Download" next to any format
-3. The file will be downloaded to your device
-
-## API Endpoints
-
-### Books
-- `GET /api/books` - List books with optional filters
-- `POST /api/books/upload` - Upload a new book
-- `POST /api/books/scan` - Scan filesystem for books
-- `GET /api/books/download` - Download a book file
-- `POST /api/books/convert` - Convert book format
-- `GET /api/books/metadata` - Get all tags and authors
-
-### Authentication
-- `POST /api/auth/signin` - Sign in
-- `POST /api/auth/signout` - Sign out
 
 ## Configuration
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXTAUTH_URL` | Application URL | `http://localhost:3000` |
-| `NEXTAUTH_SECRET` | Secret for JWT signing | Required |
-| `LIBRARY_PATH` | Path to library folder | `./library` |
-| `BOOKS_PATH` | Path to books folder | `./library/books` |
-| `COVERS_PATH` | Path to covers folder | `./public/covers` |
-| `CALIBRE_PATH` | Path to ebook-convert binary | System PATH |
+For Docker deployment (`.env`):
 
-### User Management
+```env
+# Required: Generate with `openssl rand -base64 32`
+NEXTAUTH_SECRET=your-generated-secret
 
-The default implementation uses in-memory user storage. To add users:
+# App URL
+NEXTAUTH_URL=http://localhost:3000
 
-1. Edit `auth.ts`
-2. Add users to the `users` Map:
-```typescript
-users.set('user@example.com', {
-  id: '2',
-  email: 'user@example.com',
-  password: 'password123', // Hash in production!
-  name: 'User Name',
-});
+# Host port (default: 3000)
+APP_PORT=3000
+
+# Data storage path on host (default: ./data)
+DATA_PATH=./data
 ```
 
-For production, implement proper password hashing (bcrypt, argon2) and persistent storage.
+For development (`.env.local`):
 
-## Development
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-generated-secret
 
-### Building for Production
-```bash
-npm run build
-npm start
+# Library paths
+LIBRARY_PATH=./library
+BOOKS_PATH=./library/books
+
+# Calibre service
+CALIBRE_MODE=remote
+CALIBRE_API_URL=http://localhost:8081
 ```
 
-### Linting
-```bash
-npm run lint
+### Change Port
+
+To run on a different port, set `APP_PORT` in `.env`:
+
+```env
+APP_PORT=8080
+NEXTAUTH_URL=http://localhost:8080
 ```
+
+## Usage
+
+### Managing Books
+
+- **Upload** - Click "Upload" to add ebooks (EPUB, PDF, MOBI, AZW, AZW3, TXT, DOCX)
+- **Convert** - Check a format checkbox to convert to that format
+- **Download** - Click format label to download
+- **Delete** - Uncheck a format checkbox to delete it
+
+### Sharing Books
+
+1. Click **Share** on any book card
+2. Link is copied to clipboard automatically
+3. Anyone with the link can download any available format
+
+### Embedding
+
+After sharing a book, click **Embed** to copy iframe code for your website:
+
+```html
+<iframe
+  src="https://your-booker-instance/api/embed/TOKEN"
+  width="420"
+  height="336"
+  frameborder="0"
+  style="border-radius: 12px; max-width: 100%;">
+</iframe>
+```
+
+The embed widget auto-detects dark mode via `dark` or `color-theme-4` class on the parent page. Force a theme with `?theme=dark` or `?theme=light`.
 
 ## Project Structure
 
 ```
-bookstore/
-├── app/                    # Next.js app directory
+booker/
+├── app/                    # Next.js app router
 │   ├── api/               # API routes
-│   │   ├── auth/          # Authentication endpoints
-│   │   └── books/         # Book management endpoints
+│   │   ├── books/         # Book management
+│   │   ├── embed/         # Embed widget
+│   │   └── share/         # Public sharing
 │   ├── library/           # Main library page
-│   ├── login/             # Login page
-│   └── layout.tsx         # Root layout
+│   └── share/             # Public share page
 ├── components/            # React components
-│   ├── ui/                # shadcn/ui components
-│   ├── book-card.tsx      # Book card component
-│   ├── filter-panel.tsx   # Filtering sidebar
-│   └── upload-dialog.tsx  # Upload modal
-├── lib/                   # Utility functions
-│   ├── types.ts           # TypeScript types
-│   ├── metadata-manager.ts # Metadata cache manager
-│   ├── book-scanner.ts    # Filesystem scanner
-│   └── book-converter.ts  # Format conversion
-├── library/               # Book storage (gitignored)
-│   ├── metadata.json      # Book metadata
-│   └── books/             # Book files
-├── public/                # Static assets
-│   └── covers/            # Book cover images
-└── auth.ts                # NextAuth configuration
+├── lib/                   # Utilities
+│   ├── book-converter.ts  # Calibre integration
+│   ├── metadata-manager.ts
+│   ├── share-manager.ts
+│   └── user-store.ts
+├── data/                  # Data storage (Docker volume, gitignored)
+│   ├── books/            # Uploaded ebooks
+│   ├── covers/           # Book cover images
+│   ├── metadata.json     # Book metadata
+│   ├── shares.json       # Share tokens
+│   └── users.json        # User accounts
+├── calibre-service.py    # Calibre HTTP API
+└── Dockerfile.calibre    # Calibre container
 ```
 
-## Troubleshooting
+## API Reference
 
-### Calibre Not Found
-- Ensure Calibre is installed
-- Add Calibre's bin directory to your system PATH
-- Or set `CALIBRE_PATH` in `.env.local`
+### Books
 
-### Books Not Showing After Scan
-- Check folder structure matches: `library/books/book-name/file.epub`
-- Ensure files have supported extensions
-- Check console for errors
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/books` | GET | List all books |
+| `/api/books/upload` | POST | Upload a book |
+| `/api/books/[id]` | DELETE | Delete a book |
+| `/api/books/download` | GET | Download a format |
+| `/api/books/convert` | POST | Convert format |
+| `/api/books/format` | DELETE | Delete a format |
 
-### Upload Fails
-- Check file size (default max: 50MB)
-- Verify file format is supported
-- Ensure write permissions on `library/books/` folder
+### Sharing
 
-### Conversion Fails
-- Verify Calibre is installed and accessible
-- Check console/network tab for error details
-- Some formats may have limited conversion options
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/books/[id]/share` | POST | Create share link |
+| `/api/share/[token]` | GET | Get shared book info |
+| `/api/share/[token]` | POST | Download shared format |
+| `/api/embed/[token]` | GET | Get embeddable HTML widget |
 
-## Roadmap
+## Tech Stack
 
-### Planned Features
-- [ ] Cover image extraction from ebook files
-- [ ] Advanced metadata editing
-- [ ] Collections/shelves organization
-- [ ] Reading progress tracking
-- [ ] "Send to Kindle" email integration
-- [ ] Cloud storage integration (Dropbox, Google Drive)
-- [ ] Multiple user accounts with MongoDB
-- [ ] Reading statistics and analytics
-- [ ] Book recommendations
+- **Framework**: Next.js 16 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS 4
+- **Components**: shadcn/ui
+- **Authentication**: NextAuth.js v5
+- **Conversion**: Calibre (Docker)
 
-## Contributing
+## Deployment
 
-This is a personal project, but suggestions and bug reports are welcome!
+### Docker Compose (Recommended)
+
+```bash
+# Production deployment
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Rebuild after code changes
+docker compose build && docker compose up -d
+```
+
+### Manual Deployment
+
+```bash
+# Build the app
+npm run build
+
+# Start Calibre service
+docker compose up -d calibre
+
+# Start the app
+npm start
+```
 
 ## License
 
-MIT License - feel free to use this for your personal library!
+MIT
 
-## Credits
+## Acknowledgments
 
-- Built with [Next.js](https://nextjs.org/)
-- UI components by [shadcn/ui](https://ui.shadcn.com/)
-- Ebook conversion powered by [Calibre](https://calibre-ebook.com/)
-- Authentication via [NextAuth.js](https://next-auth.js.org/)
-
----
-
-**Happy Reading! 📚**
+- [Calibre](https://calibre-ebook.com/) - Ebook conversion
+- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- [Next.js](https://nextjs.org/) - Framework

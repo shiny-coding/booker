@@ -10,14 +10,20 @@ export async function GET() {
   }
 
   try {
+    const userId = session.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
+    }
+
     const metadataManager = getMetadataManager();
 
     // Force reload from file to ensure fresh data
     await metadataManager.load();
 
     const [tags, authors] = await Promise.all([
-      metadataManager.getAllTags(),
-      metadataManager.getAllAuthors(),
+      metadataManager.getAllTags(userId),
+      metadataManager.getAllAuthors(userId),
     ]);
 
     return NextResponse.json({

@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
 
     const book: Book = {
       id: bookId,
+      userId: session.user?.id || '',
       title,
       author,
       tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],

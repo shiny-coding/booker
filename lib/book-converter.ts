@@ -259,10 +259,11 @@ export class BookConverter {
     targetPath: string
   ): Promise<void> {
     try {
-      // For remote mode, prepend 'books/' since Docker mounts ./library:/books
-      // and our files are in library/books/
-      const remoteSourcePath = `books/${sourcePath}`;
-      const remoteTargetPath = `books/${targetPath}`;
+      // Paths are already relative to BOOKS_PATH (e.g., "book-123/file.epub")
+      // Calibre service CALIBRE_LIBRARY_PATH is set to /data/books in docker-compose
+      // So we pass paths directly without prefix
+      const remoteSourcePath = sourcePath;
+      const remoteTargetPath = targetPath;
 
       const response = await fetch(`${CALIBRE_API_URL}/convert`, {
         method: 'POST',
