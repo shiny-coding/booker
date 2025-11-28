@@ -36,8 +36,13 @@ export async function GET(
       });
     }
 
-    // Get the base URL from the request
-    const baseUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+    // Get the base URL from the request, respecting reverse proxy headers
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+
+    const host = forwardedHost || request.nextUrl.host;
+    const protocol = forwardedProto ? `${forwardedProto}:` : request.nextUrl.protocol;
+    const baseUrl = `${protocol}//${host}`;
 
     const html = generateEmbedHTML({
       token,
@@ -213,6 +218,7 @@ function generateEmbedHTML(data: EmbedData): string {
     .book-icon {
       color: var(--muted);
       margin-bottom: 12px;
+      text-align: center;
     }
 
     .book-title {
@@ -331,9 +337,6 @@ function generateEmbedHTML(data: EmbedData): string {
       <div class="formats-list">
         ${formatsHtml}
       </div>
-      <p class="powered-by">
-        <a href="${escapeHtml(baseUrl)}/share/${escapeHtml(token)}" target="_blank">View on Booker</a>
-      </p>
     </div>
   </div>
 

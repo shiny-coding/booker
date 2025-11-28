@@ -1,0 +1,5 @@
+we use ssh creds (which are in additional.7z)
+bhajan-admin-user
+bhajan-admin-user_key
+
+sudo chown -R bhajan-admin-user:www-data /var/www/miracall.net/booker

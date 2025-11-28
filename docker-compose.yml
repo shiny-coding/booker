@@ -34,7 +34,7 @@ services:
     ports:
       - "${CALIBRE_PORT:-8081}:8080"
     environment:
-      - CALIBRE_LIBRARY_PATH=/library/books
+      - CALIBRE_LIBRARY_PATH=/data/books
     volumes:
       - ${DATA_PATH:-./data}:/data
       - ./library:/library
