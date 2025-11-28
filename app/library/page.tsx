@@ -103,8 +103,8 @@ export default function LibraryPage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <BookIcon className="h-6 w-6" />
-              Booker
+              <BookIcon className="h-6 w-6 gradient-icon" />
+              <span className="gradient-text">Booker</span>
             </h1>
             <p className="text-sm text-muted-foreground">
               {filteredBooks.length} of {books.length} books
@@ -112,15 +112,15 @@ export default function LibraryPage() {
           </div>
           <div className="flex gap-2">
             <UploadDialog onUploadSuccess={fetchBooks} />
-            <Button onClick={handleScan} disabled={scanning} variant="outline">
+            <Button onClick={handleScan} disabled={scanning} variant="outline" className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10">
               {scanning ? 'Scanning...' : 'Scan Library'}
             </Button>
             <ThemeToggle />
             <div className="flex items-center gap-2">
               {session?.user?.email && (
-                <span className="text-sm text-muted-foreground">{session.user.email}</span>
+                <span className="text-sm text-[var(--accent-dark-orange)]">{session.user.email}</span>
               )}
-              <Button onClick={() => signOut()} variant="outline">
+              <Button onClick={() => signOut()} variant="outline" className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10">
                 Sign Out
               </Button>
             </div>
@@ -135,7 +135,7 @@ export default function LibraryPage() {
             placeholder="Search books..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full"
+            className="w-full border-[var(--accent-orange)] focus:border-[var(--accent-red)]"
             maxLength={100}
           />
         </div>

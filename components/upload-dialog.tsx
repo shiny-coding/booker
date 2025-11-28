@@ -105,11 +105,11 @@ export function UploadDialog({ onUploadSuccess }: UploadDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Upload Book</Button>
+        <Button className="btn-gradient">Upload Book</Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Upload New Book</DialogTitle>
+          <DialogTitle className="gradient-text">Upload New Book</DialogTitle>
           <DialogDescription>
             Upload an ebook file and provide its metadata
           </DialogDescription>
@@ -123,8 +123,8 @@ export function UploadDialog({ onUploadSuccess }: UploadDialogProps) {
               {...getRootProps()}
               className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
                 isDragActive
-                  ? 'border-primary bg-primary/5'
-                  : 'border-muted-foreground/25 hover:border-primary/50'
+                  ? 'border-[var(--accent-orange)] bg-[var(--accent-orange)]/5'
+                  : 'border-[var(--accent-orange)]/50 hover:border-[var(--accent-orange)]'
               }`}
             >
               <input {...getInputProps()} />

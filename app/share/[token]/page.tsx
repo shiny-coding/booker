@@ -138,25 +138,25 @@ export default function SharePage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
+        <Card className="gradient-border">
           <CardHeader>
-            <CardTitle className="text-2xl">{book.title}</CardTitle>
-            <CardDescription className="text-lg">by {book.author}</CardDescription>
+            <CardTitle className="text-2xl gradient-text">{book.title}</CardTitle>
+            <CardDescription className="text-lg text-[var(--accent-dark-orange)]">by {book.author}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {book.description && (
               <div>
-                <h3 className="font-semibold mb-2">Description</h3>
+                <h3 className="font-semibold mb-2 text-[var(--accent-dark-orange)]">Description</h3>
                 <p className="text-sm text-muted-foreground">{book.description}</p>
               </div>
             )}
 
             {book.tags.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">Tags</h3>
+                <h3 className="font-semibold mb-2 text-[var(--accent-dark-orange)]">Tags</h3>
                 <div className="flex flex-wrap gap-1">
                   {book.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">
+                    <Badge key={tag} variant="outline" className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)]">
                       {tag}
                     </Badge>
                   ))}
@@ -165,23 +165,23 @@ export default function SharePage() {
             )}
 
             <div>
-              <h3 className="font-semibold mb-3">Download</h3>
+              <h3 className="font-semibold mb-3 text-[var(--accent-dark-orange)]">Download</h3>
               <div className="space-y-2">
                 {book.formats.map((format) => (
                   <div
                     key={format.format}
-                    className="flex items-center justify-between p-3 border rounded-lg"
+                    className="flex items-center justify-between p-3 border border-[var(--accent-orange)] rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <Badge>{format.format.toUpperCase()}</Badge>
-                      <span className="text-sm text-muted-foreground">
+                      <Badge className="bg-[var(--accent-orange)] text-white border-none">{format.format.toUpperCase()}</Badge>
+                      <span className="text-sm text-[var(--accent-dark-orange)]">
                         {formatFileSize(format.fileSize)}
                       </span>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="bg-white text-black border-black hover:bg-gray-100"
+                      className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
                       onClick={() => handleDownload(format.format)}
                       disabled={downloading !== null}
                     >

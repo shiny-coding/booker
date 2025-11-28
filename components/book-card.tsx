@@ -321,11 +321,11 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
   return (
     <>
       <Card
-        className="cursor-pointer hover:shadow-lg transition-shadow"
+        className="cursor-pointer hover:shadow-lg transition-shadow gradient-border"
         onClick={() => setExpanded(true)}
       >
         <CardHeader>
-          <CardTitle className="line-clamp-2">{book.title}</CardTitle>
+          <CardTitle className="line-clamp-2 text-accent-primary">{book.title}</CardTitle>
           <CardDescription>{book.author}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -349,7 +349,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
                   )}
                   <span
                     className={`text-xs font-medium select-none ${
-                      exists ? 'text-foreground cursor-pointer hover:underline' : 'text-muted-foreground'
+                      exists ? 'text-[var(--accent-dark-orange)] cursor-pointer hover:underline' : 'text-muted-foreground'
                     }`}
                     onClick={() => exists && handleDownload(format)}
                   >
@@ -395,7 +395,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
             <Button
               size="sm"
               variant="outline"
-              className="flex-1"
+              className="flex-1 border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
               onClick={handleShare}
               disabled={sharing}
             >
@@ -409,7 +409,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
             <Button
               size="sm"
               variant="outline"
-              className="flex-1"
+              className="flex-1 border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
               disabled={sharing}
               onClick={async () => {
                 let token = shareToken;
@@ -457,15 +457,15 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
       }}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">{book.title}</DialogTitle>
-            <DialogDescription>by {book.author}</DialogDescription>
+            <DialogTitle className="text-2xl gradient-text">{book.title}</DialogTitle>
+            <DialogDescription className="text-[var(--accent-dark-orange)]">by {book.author}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Description */}
             {book.description && (
               <div>
-                <h3 className="font-semibold mb-2">Description</h3>
+                <h3 className="font-semibold mb-2 text-[var(--accent-dark-orange)]">Description</h3>
                 <p className="text-sm text-muted-foreground">{book.description}</p>
               </div>
             )}
@@ -473,10 +473,10 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
             {/* Tags */}
             {book.tags.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">Tags</h3>
+                <h3 className="font-semibold mb-2 text-[var(--accent-dark-orange)]">Tags</h3>
                 <div className="flex flex-wrap gap-1">
                   {book.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">
+                    <Badge key={tag} variant="outline" className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)]">
                       {tag}
                     </Badge>
                   ))}
@@ -486,7 +486,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
 
             {/* Share Link */}
             <div>
-              <h3 className="font-semibold mb-2">Share</h3>
+              <h3 className="font-semibold mb-2 text-[var(--accent-dark-orange)]">Share</h3>
               <div className="flex items-center gap-2">
                 {shareUrl ? (
                   <>
@@ -500,6 +500,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
                       onClick={handleCopyShareUrl}
                     >
                       {copied ? (
@@ -513,6 +514,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
                   <Button
                     size="sm"
                     variant="outline"
+                    className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
                     onClick={handleShare}
                     disabled={sharing}
                   >
@@ -610,7 +612,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
             {/* Formats */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold">Formats</h3>
+                <h3 className="font-semibold text-[var(--accent-dark-orange)]">Formats</h3>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -683,7 +685,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
                           </td>
                           <td className="px-3 py-2">
                             <span
-                              className={`select-none font-medium ${exists ? 'cursor-pointer hover:underline' : ''}`}
+                              className={`select-none font-medium ${exists ? 'text-[var(--accent-dark-orange)] cursor-pointer hover:underline' : ''}`}
                               onClick={() => exists && handleDownload(format)}
                             >
                               {format.toUpperCase()}
@@ -692,7 +694,7 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
                               )}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-muted-foreground">
+                          <td className="px-3 py-2 text-[var(--accent-orange)]">
                             {formatInfo ? formatFileSize(formatInfo.fileSize) : '—'}
                           </td>
                         </tr>

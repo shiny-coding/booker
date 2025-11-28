@@ -42,11 +42,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md gradient-border">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Bookstore
+          <CardTitle className="text-2xl font-bold text-center gradient-text">
+            Booker
           </CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access your library
@@ -94,9 +94,6 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <div className="text-xs text-center text-muted-foreground mt-2">
-              Default credentials: admin@bookstore.local / admin123
-            </div>
           </form>
         </CardContent>
       </Card>
