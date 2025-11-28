@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { getMetadataManager } from '@/lib/metadata-manager';
 import { getShareManager } from '@/lib/share-manager';
+import { getBooksPath } from '@/lib/paths';
 
 // GET - Get book info for shared link (no auth required)
 export async function GET(
@@ -121,7 +122,7 @@ export async function POST(
       );
     }
 
-    const booksPath = process.env.BOOKS_PATH || './library/books';
+    const booksPath = getBooksPath();
     // Normalize path separators (handle Windows backslashes)
     const normalizedFilePath = formatInfo.filePath.replace(/\\/g, '/');
     const filePath = path.join(booksPath, normalizedFilePath);

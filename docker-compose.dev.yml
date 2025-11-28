@@ -13,10 +13,10 @@ services:
     ports:
       - "8081:8080"  # Calibre HTTP API
     volumes:
-      # Mount your local library so Calibre can access the books
-      - ./library:/books
+      # Mount your local data folder so Calibre can access the books
+      - ./data:/data
     environment:
-      - CALIBRE_LIBRARY_PATH=/books
+      - CALIBRE_LIBRARY_PATH=/data/books
     networks:
       - bookstore-dev
 

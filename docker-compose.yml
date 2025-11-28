@@ -37,7 +37,6 @@ services:
       - CALIBRE_LIBRARY_PATH=/data/books
     volumes:
       - ${DATA_PATH:-./data}:/data
-      - ./library:/library
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s

@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { getMetadataManager } from '@/lib/metadata-manager';
+import { getBooksPath } from '@/lib/paths';
 import { auth } from '@/auth';
 import {
   generateBookFolderName,
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     // Generate folder name and paths
     const folderName = generateBookFolderName(title, author);
-    const booksPath = process.env.BOOKS_PATH || './library/books';
+    const booksPath = getBooksPath();
     const bookFolderPath = path.join(booksPath, folderName);
 
     // Create book folder

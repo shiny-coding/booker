@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { getLibraryPath } from './paths';
 
 export interface ShareToken {
   token: string;
@@ -244,8 +245,7 @@ let shareManager: ShareManager | null = null;
  */
 export function getShareManager(): ShareManager {
   if (!shareManager) {
-    const libraryPath = process.env.LIBRARY_PATH || './library';
-    shareManager = new ShareManager(libraryPath);
+    shareManager = new ShareManager(getLibraryPath());
   }
   return shareManager;
 }

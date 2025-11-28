@@ -180,6 +180,8 @@ export default function SharePage() {
                     </div>
                     <Button
                       size="sm"
+                      variant="outline"
+                      className="bg-white text-black border-black hover:bg-gray-100"
                       onClick={() => handleDownload(format.format)}
                       disabled={downloading !== null}
                     >

@@ -1,9 +1,9 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import path from 'path';
+import bcrypt from 'bcrypt';
+import { getUsersPath } from './paths';
 
-// File-based user store
-const LIBRARY_PATH = process.env.LIBRARY_PATH || './library';
-const USERS_FILE = path.join(LIBRARY_PATH, 'users.json');
+const SALT_ROUNDS = 10;
 
 export interface User {
   id: string;
@@ -17,8 +17,9 @@ interface UsersData {
 
 function loadUsers(): UsersData {
   try {
-    if (existsSync(USERS_FILE)) {
-      const data = readFileSync(USERS_FILE, 'utf-8');
+    const usersFile = getUsersPath();
+    if (existsSync(usersFile)) {
+      const data = readFileSync(usersFile, 'utf-8');
       return JSON.parse(data);
     }
   } catch (error) {
@@ -29,12 +30,13 @@ function loadUsers(): UsersData {
 
 function saveUsers(data: UsersData): void {
   try {
+    const usersFile = getUsersPath();
     // Ensure directory exists
-    const dir = path.dirname(USERS_FILE);
+    const dir = path.dirname(usersFile);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
+    writeFileSync(usersFile, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error saving users:', error);
     throw error;
@@ -46,17 +48,19 @@ export function findUserByEmail(email: string): User | undefined {
   return data.users.find(u => u.email === email);
 }
 
-export function registerUser(email: string, password: string): Omit<User, 'password'> {
+export async function registerUser(email: string, password: string): Promise<Omit<User, 'password'>> {
   const data = loadUsers();
 
   if (data.users.some(u => u.email === email)) {
     throw new Error('User already exists');
   }
 
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
   const newUser: User = {
     id: String(data.users.length + 1),
     email,
-    password,
+    password: hashedPassword,
   };
 
   data.users.push(newUser);
@@ -66,6 +70,10 @@ export function registerUser(email: string, password: string): Omit<User, 'passw
     id: newUser.id,
     email: newUser.email,
   };
+}
+
+export async function verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+  return bcrypt.compare(plainPassword, hashedPassword);
 }
 
 export function userExists(email: string): boolean {

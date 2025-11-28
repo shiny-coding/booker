@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import type { Book, BookFormatInfo, BookFormat } from './types';
 import { getFormatFromFilename, isSupportedFormat, SUPPORTED_FORMATS } from './types';
 import { getMetadataManager } from './metadata-manager';
+import { getBooksPath, getCoversPath } from './paths';
 
 export class BookScanner {
   private booksPath: string;
@@ -185,7 +186,7 @@ export class BookScanner {
    * Find cover image for a book
    */
   private async findCoverImage(folderName: string): Promise<string | undefined> {
-    const coversPath = process.env.COVERS_PATH || './public/covers';
+    const coversPath = getCoversPath();
     const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
 
     for (const ext of possibleExtensions) {
@@ -220,8 +221,7 @@ let bookScanner: BookScanner | null = null;
  */
 export function getBookScanner(): BookScanner {
   if (!bookScanner) {
-    const booksPath = process.env.BOOKS_PATH || './library/books';
-    bookScanner = new BookScanner(booksPath);
+    bookScanner = new BookScanner(getBooksPath());
   }
   return bookScanner;
 }

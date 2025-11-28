@@ -3,16 +3,17 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { BookCard } from '@/components/book-card';
 import { FilterPanel } from '@/components/filter-panel';
 import { UploadDialog } from '@/components/upload-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
+import { Book as BookIcon } from 'lucide-react';
 import type { Book } from '@/lib/types';
 
 export default function LibraryPage() {
+  const { data: session } = useSession();
   const [books, setBooks] = useState<Book[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,7 +102,10 @@ export default function LibraryPage() {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Bookstore</h1>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <BookIcon className="h-6 w-6" />
+              Booker
+            </h1>
             <p className="text-sm text-muted-foreground">
               {filteredBooks.length} of {books.length} books
             </p>
@@ -112,36 +116,41 @@ export default function LibraryPage() {
               {scanning ? 'Scanning...' : 'Scan Library'}
             </Button>
             <ThemeToggle />
-            <Button onClick={() => signOut()} variant="outline">
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-2">
+              {session?.user?.email && (
+                <span className="text-sm text-muted-foreground">{session.user.email}</span>
+              )}
+              <Button onClick={() => signOut()} variant="outline">
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Sidebar - Filters */}
-          <aside className="w-full md:w-64 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Search</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Input
-                  placeholder="Search books..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </CardContent>
-            </Card>
+        {/* Search bar - limited width */}
+        <div className="mb-6 max-w-xl">
+          <Input
+            placeholder="Search books..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full"
+            maxLength={100}
+          />
+        </div>
 
-            <FilterPanel
-              availableTags={availableTags}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-            />
-          </aside>
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar - Filters (only show if there are tags) */}
+          {availableTags.length > 0 && (
+            <aside className="w-full md:w-64 space-y-4">
+              <FilterPanel
+                availableTags={availableTags}
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
+              />
+            </aside>
+          )}
 
           {/* Main Content - Books Grid */}
           <main className="flex-1">
@@ -168,7 +177,7 @@ export default function LibraryPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 justify-items-start">
                 {filteredBooks.map((book) => (
                   <BookCard key={book.id} book={book} onUpdate={fetchBooks} />
                 ))}

@@ -44,9 +44,11 @@ def convert():
     """
     try:
         data = request.json
+        print(f"Received conversion request: {data}")
         source_path = data.get('source_path')
         target_path = data.get('target_path')
         options = data.get('options', {})
+        print(f"Parsed - source: {source_path}, target: {target_path}")
 
         if not source_path or not target_path:
             return jsonify({

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { BookFormat, ConversionJob } from './types';
 import { CONVERSION_MATRIX, getExtension } from './types';
 import { getMetadataManager } from './metadata-manager';
+import { getBooksPath } from './paths';
 
 // Calibre conversion mode: 'local' or 'remote'
 const CALIBRE_MODE = process.env.CALIBRE_MODE || 'local';
@@ -135,6 +136,7 @@ export class BookConverter {
       }
 
       console.log(`Converting ${fullSourcePath} to ${fullTargetPath} (mode: ${CALIBRE_MODE})`);
+      console.log(`Remote paths - source: ${normalizedSourcePath}, target: ${normalizedTargetPath}`);
 
       // Perform conversion based on mode
       if (CALIBRE_MODE === 'remote') {
@@ -312,8 +314,7 @@ let bookConverter: BookConverter | null = null;
  */
 export function getBookConverter(): BookConverter {
   if (!bookConverter) {
-    const booksPath = process.env.BOOKS_PATH || './library/books';
-    bookConverter = new BookConverter(booksPath);
+    bookConverter = new BookConverter(getBooksPath());
   }
   return bookConverter;
 }

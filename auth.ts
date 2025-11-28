@@ -17,15 +17,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         // Dynamic import to avoid Edge Runtime issues
-        const { findUserByEmail } = await import('@/lib/user-store');
+        const { findUserByEmail, verifyPassword } = await import('@/lib/user-store');
         const user = findUserByEmail(credentials.email as string);
 
         if (!user) {
           return null;
         }
 
-        // In production, use proper password hashing (bcrypt, argon2, etc.)
-        if (user.password !== credentials.password) {
+        const isValidPassword = await verifyPassword(credentials.password as string, user.password);
+        if (!isValidPassword) {
           return null;
         }
 

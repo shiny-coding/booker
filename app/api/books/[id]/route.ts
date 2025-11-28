@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { getMetadataManager } from '@/lib/metadata-manager';
+import { getBooksPath } from '@/lib/paths';
 import { auth } from '@/auth';
 
 export async function DELETE(
@@ -36,7 +37,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const booksPath = process.env.BOOKS_PATH || './library/books';
+    const booksPath = getBooksPath();
 
     // Delete all format files
     for (const format of book.formats) {

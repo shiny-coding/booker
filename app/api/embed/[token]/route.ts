@@ -284,9 +284,9 @@ function generateEmbedHTML(data: EmbedData): string {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: var(--btn-bg);
-      color: var(--btn-fg);
-      border: none;
+      background: #ffffff;
+      color: #000000;
+      border: 1px solid #000000;
       padding: 6px 12px;
       border-radius: 6px;
       font-size: 13px;
@@ -296,7 +296,7 @@ function generateEmbedHTML(data: EmbedData): string {
     }
 
     .download-btn:hover {
-      background: var(--btn-hover);
+      background: #f5f5f5;
     }
 
     .download-btn:disabled {

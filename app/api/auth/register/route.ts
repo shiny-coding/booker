@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Register the user
-    const user = registerUser(email, password);
+    const user = await registerUser(email, password);
 
     return NextResponse.json(
       {

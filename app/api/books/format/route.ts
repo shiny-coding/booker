@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { getMetadataManager } from '@/lib/metadata-manager';
+import { getBooksPath } from '@/lib/paths';
 import { auth } from '@/auth';
 import type { BookFormat } from '@/lib/types';
 
@@ -53,7 +54,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const booksPath = process.env.BOOKS_PATH || './library/books';
+    const booksPath = getBooksPath();
     // Normalize path separators (handle Windows backslashes)
     const normalizedFilePath = formatInfo.filePath.replace(/\\/g, '/');
     const filePath = path.join(booksPath, normalizedFilePath);
