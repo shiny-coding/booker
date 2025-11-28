@@ -387,6 +387,18 @@ function generateEmbedHTML(data: EmbedData): string {
     }
 
     ${themeScript}
+
+    // Listen for theme messages from parent window
+    window.addEventListener('message', function(event) {
+      const embed = document.getElementById('booker-embed');
+      if (event.data && event.data.theme) {
+        if (event.data.theme === 'dark') {
+          embed.classList.add('dark');
+        } else {
+          embed.classList.remove('dark');
+        }
+      }
+    });
   </script>
 </body>
 </html>`;
