@@ -125,19 +125,15 @@ export function getFormatFromFilename(filename: string): BookFormat | null {
 }
 
 // Helper function to sanitize filename (for folder names)
+// Returns empty string if input produces no valid characters
 export function sanitizeFilename(filename: string): string {
   // Replace spaces and special chars with dashes, but keep unicode letters/numbers
-  let sanitized = filename
+  const sanitized = filename
     .toLowerCase()
     .replace(/\s+/g, '-') // Replace spaces with dashes
     .replace(/[^\w\-_.]/g, '-') // Replace special chars but keep unicode word chars
     .replace(/-+/g, '-') // Collapse multiple dashes
     .replace(/^-|-$/g, ''); // Remove leading/trailing dashes
-
-  // If result is empty or too short, use a fallback
-  if (!sanitized || sanitized.length < 2) {
-    sanitized = 'book-' + Date.now();
-  }
 
   return sanitized;
 }
@@ -156,9 +152,9 @@ export function cleanUploadedFilename(filename: string): string {
     .replace(/\s+/g, ' ') // Normalize spaces
     .trim();
 
-  // If result is empty, use a fallback
-  if (!cleaned || cleaned.length < 1) {
-    cleaned = 'book-' + Date.now();
+  // If result is empty, use a fallback (this is for file names, not folder names)
+  if (!cleaned) {
+    cleaned = `book-${Date.now()}`;
   }
 
   return cleaned + ext;
@@ -166,12 +162,22 @@ export function cleanUploadedFilename(filename: string): string {
 
 // Helper function to generate book folder name
 export function generateBookFolderName(title: string, author?: string): string {
-  const parts = [title];
-  if (author) {
-    parts.push(author);
-  }
-  const folderName = sanitizeFilename(parts.join('-'));
+  // Sanitize title and author separately, then join with '--' separator
+  // This allows the scanner to split them back apart
+  let sanitizedTitle = sanitizeFilename(title);
 
-  // Ensure we always have a valid folder name
-  return folderName || `book-${Date.now()}`;
+  // Fallback for title only if empty
+  if (!sanitizedTitle) {
+    sanitizedTitle = `book-${Date.now()}`;
+  }
+
+  if (author) {
+    const sanitizedAuthor = sanitizeFilename(author);
+    // Only append author if it produces valid output
+    if (sanitizedAuthor) {
+      return `${sanitizedTitle}--${sanitizedAuthor}`;
+    }
+  }
+
+  return sanitizedTitle;
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { scanBooksDirectory } from '@/lib/book-scanner';
+import { getMetadataManager } from '@/lib/metadata-manager';
 import { auth } from '@/auth';
 
 export async function POST() {
@@ -9,9 +10,22 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const userId = session.user?.id;
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
+  }
+
   try {
     console.log('Starting book directory scan...');
     const books = await scanBooksDirectory();
+
+    // Assign current user as owner of all scanned books
+    const metadataManager = getMetadataManager();
+    for (const book of books) {
+      book.userId = userId;
+      await metadataManager.upsertBook(book);
+    }
+
     console.log(`Scan complete. Found ${books.length} books.`);
 
     return NextResponse.json({

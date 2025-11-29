@@ -24,7 +24,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Trash2, Share2, Copy, Check, Download, Code } from 'lucide-react';
+import { Loader2, Trash2, Share2, Copy, Check, Download, Code, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { Book, BookFormat, BookFormatInfo } from '@/lib/types';
 import { CONVERSION_MATRIX, SUPPORTED_FORMATS } from '@/lib/types';
 
@@ -51,6 +53,10 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
   const [copied, setCopied] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
   const [copiedEmbed, setCopiedEmbed] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState(book.title);
+  const [editAuthor, setEditAuthor] = useState(book.author);
+  const [saving, setSaving] = useState(false);
 
   const handleDownload = async (format: BookFormat) => {
     const downloadToast = toast.loading(`Downloading ${format.toUpperCase()}...`);
@@ -215,6 +221,47 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
       console.error('Error deleting book:', error);
       toast.error('Failed to delete book', { id: deleteToast });
     }
+  };
+
+  const handleEditBook = async () => {
+    if (!editTitle.trim() || !editAuthor.trim()) {
+      toast.error('Title and author are required');
+      return;
+    }
+
+    setSaving(true);
+    const saveToast = toast.loading('Saving changes...');
+
+    try {
+      const response = await fetch(`/api/books/${book.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          author: editAuthor.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Book updated successfully', { id: saveToast });
+        setEditDialogOpen(false);
+        onUpdate();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to update book', { id: saveToast });
+      }
+    } catch (error) {
+      console.error('Error updating book:', error);
+      toast.error('Failed to update book', { id: saveToast });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEditDialog = () => {
+    setEditTitle(book.title);
+    setEditAuthor(book.author);
+    setEditDialogOpen(true);
   };
 
   const handleShare = async () => {
@@ -613,17 +660,31 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-[var(--accent-dark-orange)]">Formats</h3>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteBookDialogOpen(true);
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-2" />
-                  Delete Book
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditDialog();
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteBookDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                    Delete Book
+                  </Button>
+                </div>
               </div>
 
               {/* Conversion progress */}
@@ -757,6 +818,60 @@ export function BookCard({ book, onUpdate }: BookCardProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Book</DialogTitle>
+            <DialogDescription>
+              Update the book title and author. The folder will be renamed accordingly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Book title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-author">Author</Label>
+              <Input
+                id="edit-author"
+                value={editAuthor}
+                onChange={(e) => setEditAuthor(e.target.value)}
+                placeholder="Author name"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditBook}
+              disabled={saving || !editTitle.trim() || !editAuthor.trim()}
+              className="bg-[var(--accent-orange)] hover:bg-[var(--accent-dark-orange)] text-white"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
