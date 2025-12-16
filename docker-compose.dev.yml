@@ -1,25 +1,24 @@
-version: '3.8'
-
 # Development Docker Compose
 # This runs only Calibre service for Windows development
+# The main app runs locally with DATA_PATH=./data in .env.local
 
 services:
   calibre:
     build:
       context: .
       dockerfile: Dockerfile.calibre
-    container_name: bookstore-calibre-dev
+    container_name: booker-calibre-dev
     restart: unless-stopped
     ports:
-      - "8081:8080"  # Calibre HTTP API
+      - "${CALIBRE_PORT:-8081}:8080"  # Calibre HTTP API
     volumes:
-      # Mount your local data folder so Calibre can access the books
-      - ./data:/data
+      # Mount local data folder (uses DATA_PATH from .env or default)
+      - ${DATA_PATH:-./data}:/data
     environment:
       - CALIBRE_LIBRARY_PATH=/data/books
     networks:
-      - bookstore-dev
+      - booker-dev
 
 networks:
-  bookstore-dev:
+  booker-dev:
     driver: bridge

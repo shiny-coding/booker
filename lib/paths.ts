@@ -5,32 +5,37 @@ import path from 'path';
  * All paths default to ./data directory structure.
  */
 
-/** Base library/data path */
+/** Base data path */
+export function getDataPath(): string {
+  return process.env.DATA_PATH || './data';
+}
+
+/** @deprecated Use getDataPath() instead */
 export function getLibraryPath(): string {
-  return process.env.LIBRARY_PATH || './data';
+  return getDataPath();
 }
 
 /** Path where books are stored */
 export function getBooksPath(): string {
-  return process.env.BOOKS_PATH || path.join(getLibraryPath(), 'books');
+  return process.env.BOOKS_PATH || path.join(getDataPath(), 'books');
 }
 
 /** Path where cover images are stored */
 export function getCoversPath(): string {
-  return process.env.COVERS_PATH || path.join(getLibraryPath(), 'covers');
+  return process.env.COVERS_PATH || path.join(getDataPath(), 'covers');
 }
 
 /** Path for metadata.json file */
 export function getMetadataPath(): string {
-  return path.join(getLibraryPath(), 'metadata.json');
+  return path.join(getDataPath(), 'metadata.json');
 }
 
 /** Path for users.json file */
 export function getUsersPath(): string {
-  return path.join(getLibraryPath(), 'users.json');
+  return path.join(getDataPath(), 'users.json');
 }
 
 /** Path for share-tokens.json file */
 export function getShareTokensPath(): string {
-  return path.join(getLibraryPath(), 'share-tokens.json');
+  return path.join(getDataPath(), 'share-tokens.json');
 }

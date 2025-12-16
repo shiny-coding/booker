@@ -12,9 +12,7 @@ services:
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - AUTH_TRUST_HOST=true
-      - LIBRARY_PATH=/data
-      - BOOKS_PATH=/data/books
-      - COVERS_PATH=/data/covers
+      - DATA_PATH=/data
       - CALIBRE_MODE=remote
       - CALIBRE_API_URL=http://calibre:8080
     volumes:
