@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import type { Book, BookMetadataCache } from './types';
-import { getLibraryPath } from './paths';
+import { getDataPath } from './paths';
 
 const METADATA_VERSION = '1.0.0';
 const METADATA_FILENAME = 'metadata.json';
@@ -272,7 +272,7 @@ let metadataManager: MetadataManager | null = null;
  */
 export function getMetadataManager(): MetadataManager {
   if (!metadataManager) {
-    metadataManager = new MetadataManager(getLibraryPath());
+    metadataManager = new MetadataManager(getDataPath());
   }
   return metadataManager;
 }

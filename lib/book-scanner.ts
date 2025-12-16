@@ -15,6 +15,7 @@ export class BookScanner {
 
   /**
    * Scan the books directory and update metadata
+   * Preserves user-edited fields (title, author, tags, description) for existing books
    */
   async scan(): Promise<Book[]> {
     console.log(`Starting scan of: ${this.booksPath}`);
@@ -25,10 +26,12 @@ export class BookScanner {
     const books: Book[] = [];
 
     try {
-      // Clear existing metadata before scanning
       const metadataManager = getMetadataManager();
-      await metadataManager.clear();
-      console.log('Cleared existing metadata');
+
+      // Load existing metadata to preserve user edits
+      const existingBooks = await metadataManager.getBooks();
+      const existingBooksMap = new Map(existingBooks.map(b => [b.id, b]));
+      console.log(`Loaded ${existingBooks.length} existing books`);
 
       // Read all book folders
       const entries = await fs.readdir(this.booksPath, { withFileTypes: true });
@@ -36,20 +39,55 @@ export class BookScanner {
 
       console.log(`Found ${bookFolders.length} book folders`);
 
+      // Track which books we found on disk
+      const foundBookIds = new Set<string>();
+
       for (const folder of bookFolders) {
         try {
-          const book = await this.scanBookFolder(folder.name);
-          if (book) {
-            books.push(book);
+          const scannedBook = await this.scanBookFolder(folder.name);
+          if (scannedBook) {
+            foundBookIds.add(scannedBook.id);
+
+            // Check if book already exists
+            const existingBook = existingBooksMap.get(scannedBook.id);
+            if (existingBook) {
+              // Preserve user-edited fields, update file-related fields
+              const mergedBook: Book = {
+                ...scannedBook,
+                // Preserve user-edited fields
+                title: existingBook.title,
+                author: existingBook.author,
+                tags: existingBook.tags,
+                description: existingBook.description,
+                coverPath: existingBook.coverPath || scannedBook.coverPath,
+                userId: existingBook.userId,
+                addedDate: existingBook.addedDate,
+                // Update with fresh scan data
+                formats: scannedBook.formats,
+                updatedDate: new Date(),
+              };
+              books.push(mergedBook);
+            } else {
+              // New book, use scanned data
+              books.push(scannedBook);
+            }
           }
         } catch (error) {
           console.error(`Error scanning folder ${folder.name}:`, error);
         }
       }
 
-      // Update metadata
+      // Update metadata for all scanned books
       for (const book of books) {
         await metadataManager.upsertBook(book);
+      }
+
+      // Remove books that no longer exist on disk
+      for (const existingBook of existingBooks) {
+        if (!foundBookIds.has(existingBook.id)) {
+          console.log(`Removing book no longer on disk: ${existingBook.title}`);
+          await metadataManager.removeBook(existingBook.id);
+        }
       }
 
       await metadataManager.updateLastScan();
