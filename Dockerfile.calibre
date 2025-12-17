@@ -1,4 +1,5 @@
 # Lightweight Calibre service for ebook conversion
+# Build trigger: 2025-12-17
 FROM python:3.11-slim
 
 # Install system dependencies for Calibre and PDF conversion
