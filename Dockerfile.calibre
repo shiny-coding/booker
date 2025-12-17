@@ -62,9 +62,6 @@ ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
-# Disable Calibre auto-update check
-ENV CALIBRE_NO_UPDATE_CHECK=1
-
 # Install Calibre
 RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin install_dir=/opt/calibre
 
