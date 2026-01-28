@@ -39,6 +39,13 @@ export function UploadDialog({ onUploadSuccess }: UploadDialogProps) {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
     maxFiles: 1,
+    maxSize: 100 * 1024 * 1024, // 100MB
+    onDropRejected: (rejections) => {
+      const rejection = rejections[0];
+      if (rejection?.errors?.some(e => e.code === 'file-too-large')) {
+        toast.error('File is too large. Maximum size is 100MB.');
+      }
+    },
     onDrop: (acceptedFiles) => {
       if (acceptedFiles.length > 0) {
         const uploadedFile = acceptedFiles[0];

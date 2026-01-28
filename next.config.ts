@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   // Disable source maps in development to avoid Windows path issues
   productionBrowserSourceMaps: false,
   serverExternalPackages: [],
+  // Allow 100MB file uploads
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
+  },
 };
 
 export default nextConfig;
