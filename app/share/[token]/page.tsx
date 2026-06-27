@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, BookOpen, AlertCircle } from 'lucide-react';
+import { Download, BookOpen, AlertCircle, ExternalLink } from 'lucide-react';
 
 interface BookFormat {
   format: string;
@@ -178,16 +178,35 @@ export default function SharePage() {
                         {formatFileSize(format.fileSize)}
                       </span>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
-                      onClick={() => handleDownload(format.format)}
-                      disabled={downloading !== null}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      {downloading === format.format ? 'Downloading...' : 'Download'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {format.format === 'html' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
+                          asChild
+                        >
+                          <a
+                            href={`/api/share/${token}/view`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Open
+                          </a>
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-[var(--accent-orange)] text-[var(--accent-dark-orange)] hover:bg-[var(--accent-orange)]/10"
+                        onClick={() => handleDownload(format.format)}
+                        disabled={downloading !== null}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        {downloading === format.format ? 'Downloading...' : 'Download'}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

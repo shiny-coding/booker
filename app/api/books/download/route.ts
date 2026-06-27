@@ -88,6 +88,7 @@ function getContentType(format: string): string {
     azw: 'application/vnd.amazon.ebook',
     azw3: 'application/vnd.amazon.ebook',
     txt: 'text/plain',
+    html: 'text/html; charset=utf-8',
   };
 
   return contentTypes[format.toLowerCase()] || 'application/octet-stream';

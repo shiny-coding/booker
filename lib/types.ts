@@ -1,5 +1,5 @@
 // Book format types
-export type BookFormat = 'epub' | 'pdf' | 'azw3' | 'mobi' | 'azw' | 'txt' | 'docx';
+export type BookFormat = 'epub' | 'pdf' | 'azw3' | 'mobi' | 'azw' | 'txt' | 'docx' | 'html';
 
 // Book format information
 export interface BookFormatInfo {
@@ -86,6 +86,7 @@ export const CONVERSION_MATRIX: Record<BookFormat, BookFormat[]> = {
   azw: ['epub', 'pdf', 'azw3', 'txt'],
   txt: ['epub', 'pdf'],
   docx: ['epub', 'pdf', 'azw3', 'mobi', 'txt'],
+  html: ['epub', 'pdf', 'azw3', 'mobi', 'txt'],
 };
 
 // File extensions mapping
@@ -97,10 +98,11 @@ export const FORMAT_EXTENSIONS: Record<BookFormat, string> = {
   azw: '.azw',
   txt: '.txt',
   docx: '.docx',
+  html: '.html',
 };
 
 // Supported upload formats
-export const SUPPORTED_FORMATS: BookFormat[] = ['epub', 'pdf', 'mobi', 'azw', 'azw3', 'txt', 'docx'];
+export const SUPPORTED_FORMATS: BookFormat[] = ['epub', 'pdf', 'mobi', 'azw', 'azw3', 'txt', 'docx', 'html'];
 
 // Helper function to check if format is supported
 export function isSupportedFormat(format: string): format is BookFormat {

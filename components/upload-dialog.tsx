@@ -37,6 +37,7 @@ export function UploadDialog({ onUploadSuccess }: UploadDialogProps) {
       'application/vnd.amazon.ebook': ['.azw', '.azw3'],
       'text/plain': ['.txt'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'text/html': ['.html'],
     },
     maxFiles: 1,
     maxSize: 100 * 1024 * 1024, // 100MB
