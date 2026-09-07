@@ -40,7 +40,9 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Exec form (JSON array): no /bin/sh is spawned for each check. The shell form made Falco fire
+# "Shell Spawned in Container" every 30s on the prod host (2026-09-07).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/', (r) => {process.exit(r.statusCode < 400 ? 0 : 1)})"
+    CMD ["node", "-e", "require('http').get('http://localhost:3000/', (r) => {process.exit(r.statusCode < 400 ? 0 : 1)})"]
 
 CMD ["npm", "start"]
