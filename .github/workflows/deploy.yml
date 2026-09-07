@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      no_cache:
+        description: "Rebuild images from scratch (--no-cache)"
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -18,10 +23,20 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
+          # Build FIRST (the site keeps serving the old containers), through the host-wide guard:
+          # it refuses to build when disk < 8 G or MemAvailable < 5 G and caps the build at 4 G RAM,
+          # so a build can fail (exit 137) but can no longer take the whole host down
+          # (2026-09-05/07 outages). Exit 2 = built OK but disk is low afterwards -> still deploy,
+          # `image prune` below reclaims. Then `up -d` recreates only what changed (seconds of
+          # downtime instead of the whole build). --no-cache only on manual dispatch.
           script: |
+            set -o pipefail
             cd /var/www/miracall.net/booker
             git pull origin main
-            docker compose down
-            docker compose build --no-cache
+            NC=""; [ "${{ inputs.no_cache }}" = "true" ] && NC="--no-cache"
+            for svc in booker calibre; do
+              rc=0; sudo -n /usr/local/bin/safe-docker-build compose -f docker-compose.yml build "$svc" $NC || rc=$?
+              [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ] || exit "$rc"
+            done
             docker compose up -d
             docker image prune -f
