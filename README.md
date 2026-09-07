@@ -201,7 +201,7 @@ docker compose up -d
 docker compose logs -f
 
 # Rebuild after code changes
-docker compose build && docker compose up -d
+safe-docker-build compose -f docker-compose.yml build booker && docker compose up -d   # prod host: guarded build (see DEPLOYMENT.md 1.5)
 ```
 
 ### Manual Deployment

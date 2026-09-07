@@ -106,9 +106,22 @@ services:
 
 ### 1.5 Build and Run
 
+> ⚠️ **On the miracall.net prod host, never run a bare `docker compose build`.** The box has 16 GB
+> RAM and ~30 containers; an unguarded build pushed it into a 20-minute swap-thrash outage twice
+> (2026-09-05, 2026-09-07). Build through the host-wide wrapper instead — it refuses to start when
+> disk < 8 G or MemAvailable < 5 G and caps the build's RUN steps at 4 G RAM (an oversized build
+> then fails with exit 137 instead of taking the host down):
+>
+> ```bash
+> safe-docker-build compose -f docker-compose.yml build booker
+> safe-docker-build compose -f docker-compose.yml build calibre    # only when Dockerfile.calibre changed
+> ```
+>
+> `safe-docker-build --help` for options (`--no-cache`, `--pull`, `--build-arg`, `--dry-run`).
+
 ```bash
 # Build the Docker image
-docker compose build
+safe-docker-build compose -f docker-compose.yml build booker   # prod host: guarded (see 1.5)
 
 # Start the application
 docker compose up -d
@@ -148,7 +161,7 @@ docker compose logs -f
 # Update to new version
 git pull  # or upload new files
 docker compose down
-docker compose build
+safe-docker-build compose -f docker-compose.yml build booker   # prod host: guarded (see 1.5)
 docker compose up -d
 
 # Clean up old images
@@ -424,7 +437,7 @@ git pull  # or upload new files
 
 # Rebuild and restart
 docker compose down
-docker compose build --no-cache
+safe-docker-build compose -f docker-compose.yml build booker --no-cache   # prod host: guarded (see 1.5)
 docker compose up -d
 
 # View logs
@@ -515,7 +528,7 @@ docker compose restart
 
 # Rebuild from scratch
 docker compose down
-docker compose build --no-cache
+safe-docker-build compose -f docker-compose.yml build booker --no-cache   # prod host: guarded (see 1.5)
 docker compose up -d
 
 # Check Calibre in container
