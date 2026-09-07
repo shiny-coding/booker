@@ -33,7 +33,9 @@ jobs:
             set -o pipefail
             cd /var/www/miracall.net/booker
             git pull origin main
-            NC=""; [ "${{ inputs.no_cache }}" = "true" ] && NC="--no-cache"
+            # script_stop makes the action append an exit-on-nonzero check after EVERY line, so no
+            # bare `[ … ] && …` (it returns 1 when the test is false and killed run 34146925640).
+            NC=""; if [ "${{ inputs.no_cache }}" = "true" ]; then NC="--no-cache"; fi
             for svc in booker calibre; do
               rc=0; sudo -n /usr/local/bin/safe-docker-build compose -f docker-compose.yml build "$svc" $NC || rc=$?
               [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ] || exit "$rc"
